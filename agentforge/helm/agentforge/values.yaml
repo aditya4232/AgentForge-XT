@@ -1,0 +1,25 @@
+frontend:
+  image: adityashenvi/agentforge-frontend:latest
+  replicas: 2
+  service:
+    type: LoadBalancer
+    port: 80
+
+backend:
+  image: adityashenvi/agentforge-backend:latest
+  replicas: 2
+  service:
+    type: ClusterIP
+    port: 8000
+
+worker:
+  image: adityashenvi/agentforge-worker:latest
+  replicas: 1
+
+postgres:
+  enabled: true
+  storage: 10Gi
+  password: "changeme"
+
+redis:
+  enabled: true

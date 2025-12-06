@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: agentforge
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/adityashenvi/agentforge-xt.git
+    targetRevision: HEAD
+    path: helm/agentforge
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: agentforge
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
