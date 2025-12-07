@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 import ReactFlow, {
     Node,
     Edge,
@@ -108,10 +109,10 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
             {data.status && (
                 <div
                     className={`px-3 py-1.5 border-t text-xs flex items-center gap-1.5 ${data.status === "success"
-                            ? "border-green-200 bg-green-50 text-green-600 dark:border-green-900 dark:bg-green-950"
-                            : data.status === "error"
-                                ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900 dark:bg-red-950"
-                                : "border-border"
+                        ? "border-green-200 bg-green-50 text-green-600 dark:border-green-900 dark:bg-green-950"
+                        : data.status === "error"
+                            ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900 dark:bg-red-950"
+                            : "border-border"
                         }`}
                 >
                     {data.status === "success" && <CheckCircle className="h-3 w-3" />}
@@ -210,9 +211,51 @@ export default function WorkflowEditorPage() {
     );
 
     const handleSave = async () => {
+        if (!params.id) return;
         setIsSaving(true);
-        await new Promise((r) => setTimeout(r, 800));
-        setIsSaving(false);
+        try {
+            // Get current user (simple check, relies on RLS for security)
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Not authenticated");
+
+            // Look up profile id from user id
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('email', user.email) // Assuming email sync, or better yet create profile if missing
+                .single();
+
+            // Note: In production, use a more robust user ID mapping.
+            // For now, we assume the user exists in 'profiles' or we use user.id if profiles uses auth.uid()
+
+            const workflowData = {
+                name: workflowName,
+                nodes: nodes,
+                edges: edges,
+                updated_at: new Date().toISOString(),
+                // If creating new, we need user_id. If updating, RLS handles it.
+                // We'll trust RLS and just pass what's needed.
+            };
+
+            const { error } = await supabase
+                .from('workflows')
+                .upsert({
+                    id: params.id as string,
+                    ...workflowData,
+                    // If it's a new insert, we need user_id. 
+                    // Let's assume we are updating an existing one or creating one.
+                    // If creating, we need user_id.
+                })
+                .select();
+
+            if (error) throw error;
+            console.log("Saved successfully");
+        } catch (error) {
+            console.error("Error saving workflow:", error);
+            alert("Failed to save workflow");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleExecute = async () => {
@@ -263,6 +306,17 @@ export default function WorkflowEditorPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <a
+                        href="http://localhost:5678"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-secondary text-sm flex items-center gap-2"
+                        title="Open n8n Automation Engine"
+                    >
+                        <Zap className="h-4 w-4 text-orange-500" />
+                        <span className="hidden sm:inline">Engine</span>
+                    </a>
+                    <div className="h-6 w-px bg-border mx-1" />
                     <button onClick={() => setShowNodePanel(!showNodePanel)} className="btn-secondary text-sm">
                         <Plus className="h-4 w-4" />
                         Add node

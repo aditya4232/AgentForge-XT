@@ -39,3 +39,22 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
+
+# Supabase
+supabase/tmp/
+supabase/.temp/
+.supabase/
+
+# Docker
+docker-compose.override.yml
+.n8n/
+postgres_data/
+n8n_data/
+
+# Misc
+.DS_Store
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
