@@ -1,127 +1,169 @@
-# AgentForge-XT
+# AgentForge-XT 🚀
 
-> Built by **Aditya Shenvi** | v0.5 Beta
+**Visual Multi-Agent Workflow Builder** - Build AI agent teams with drag-and-drop simplicity.
 
-So you want to build AI agents that actually work in production? Same. That's why I built AgentForge-XT.
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688)](https://fastapi.tiangolo.com/)
+[![CrewAI](https://img.shields.io/badge/CrewAI-Latest-blue)](https://www.crewai.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-It's a full-stack platform where you can visually design agent workflows, run them without your API hanging forever, and actually see what's happening under the hood. No more "it works on my machine" nonsense.
+## 🌟 What Makes Us Unique
 
----
+AgentForge-XT is the **first visual multi-agent builder** that lets you create AI agent teams without writing code. Watch agents collaborate, debate, and solve complex tasks in real-time.
 
-## Why I Built This
+### Key Features
 
-I got tired of:
-- Writing spaghetti code to connect agents together
-- Having my backend freeze while waiting for LLM responses  
-- Not knowing why my agent decided to do something weird
-- Paying for API calls just to test basic flows
+- 🎨 **Visual Agent Builder** - Drag-and-drop interface powered by React Flow
+- 🤖 **Multi-Agent Collaboration** - Agents work together using CrewAI
+- ⚡ **100% Free Tier** - Groq, Supabase, Qdrant Cloud, Clerk, Vercel
+- 📊 **Real-Time Dashboard** - Watch agents think and collaborate live
+- 🏪 **Template Marketplace** - Pre-built agent teams ready to use
+- 🔐 **Enterprise Auth** - Clerk with social logins and MFA
+- 🧠 **Vector Memory** - RAG-powered context-aware agents
 
-So I made something that solves all of that.
+## 🚀 Quick Start
 
----
+### Prerequisites
 
-## What You Get
+- Node.js 18+ and npm
+- Python 3.11+
+- Git
 
-**Visual Builder** — Drag nodes, connect edges, done. Your agent logic is a graph, not a mess of function calls.
-
-**Async Everything** — Celery workers handle execution. Your API stays responsive. Users don't stare at spinners.
-
-**Local LLMs** — Ollama integration out of the box. Test with Llama, Mistral, whatever. Zero API costs during dev.
-
-**See What's Happening** — Prometheus metrics, Grafana dashboards, MLflow traces. When something breaks, you'll know why.
-
-**Actually Deploys** — Docker Compose for local, Helm charts for K8s, Terraform for infra. Not just a demo.
-
----
-
-## Get It Running
-
-You need Docker. That's basically it.
+### 1. Clone the Repository
 
 ```bash
-docker-compose up --build
+git clone https://github.com/yourusername/AgentForge-XT.git
+cd AgentForge-XT
 ```
 
-First build takes a few minutes (grab coffee ☕). Then hit these URLs:
+### 2. Set Up Environment Variables
 
-- **UI**: http://localhost:3000  
-- **API Docs**: http://localhost:8000/docs  
-- **Grafana**: http://localhost:3001 (admin/admin)
-- **MLflow**: http://localhost:5000
-
----
-
-## Project Layout
-
-```
-AgentForge-XT/
-├── backend/          # FastAPI app + Celery workers
-├── frontend/         # Next.js 15 interface
-├── helm/             # K8s deployment charts
-├── terraform/        # Cloud infra (AWS starter)
-├── observability/    # Prometheus/Grafana configs
-├── scripts/          # Utility scripts
-├── DOCS/             # You're reading these
-└── docker-compose.yml
-```
-
----
-
-## Run the Tests
-
-Backend:
 ```bash
+# Copy example env files
+cp .env.example .env.local
+cp backend/.env.example backend/.env
+```
+
+Edit `.env.local` and `backend/.env` with your API keys:
+
+```env
+# Get free API keys from:
+# Groq: https://console.groq.com
+# Clerk: https://clerk.com
+# Supabase: https://supabase.com
+# Qdrant: https://cloud.qdrant.io
+```
+
+### 3. Install Dependencies
+
+```bash
+# Frontend
+npm install
+
+# Backend
 cd backend
-python -m venv venv && venv\Scripts\activate
 pip install -r requirements.txt
-pytest tests/ -v
 ```
 
-Frontend:
+### 4. Run Development Servers
+
 ```bash
-cd frontend
-npm install && npm run build
+# Terminal 1 - Frontend
+npm run dev
+
+# Terminal 2 - Backend
+cd backend
+uvicorn main:app --reload
 ```
 
+Visit **http://localhost:3000** 🎉
+
+## 📦 Tech Stack
+
+### Frontend
+- **Next.js 15** - React framework with App Router
+- **TypeScript** - Type safety
+- **Tailwind CSS 4** - Styling
+- **shadcn/ui** - UI components
+- **Tremor** - Dashboard components
+- **TanStack Query** - Server state management
+- **React Flow** - Visual workflow builder
+- **Clerk** - Authentication
+
+### Backend
+- **FastAPI** - Python async framework
+- **CrewAI** - Multi-agent orchestration
+- **Groq** - Free LLM inference
+- **Supabase** - PostgreSQL database
+- **Qdrant** - Vector database
+- **Redis** - Caching & queues
+
+## 🎯 Use Cases
+
+### Pre-built Agent Teams
+
+1. **Blog Writer Team**
+   - Researcher → Writer → SEO Optimizer
+   - Perfect for content creation
+
+2. **Code Review Team**
+   - Coder → Security Reviewer → Performance Optimizer
+   - Automated code quality checks
+
+3. **Market Research Team**
+   - Data Collector → Analyst → Report Writer
+   - Business intelligence automation
+
+4. **Customer Support Team**
+   - Ticket Classifier → Responder → Quality Checker
+   - Automated support workflows
+
+## 📖 Documentation
+
+- [Getting Started](docs/getting-started.md)
+- [Building Your First Agent Team](docs/first-agent-team.md)
+- [API Reference](docs/api-reference.md)
+- [Deployment Guide](docs/deployment.md)
+
+## 🚢 Deployment
+
+### Vercel (Frontend)
+
+```bash
+vercel --prod
+```
+
+### Railway (Backend)
+
+```bash
+railway up
+```
+
+See [Deployment Guide](docs/deployment.md) for detailed instructions.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md).
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [CrewAI](https://www.crewai.com/) - Multi-agent framework
+- [Groq](https://groq.com/) - Lightning-fast LLM inference
+- [shadcn/ui](https://ui.shadcn.com/) - Beautiful components
+- [Tremor](https://tremor.so/) - Dashboard components
+
+## 📧 Contact
+
+- **Twitter**: [@yourusername](https://twitter.com/yourusername)
+- **LinkedIn**: [Your Name](https://linkedin.com/in/yourprofile)
+- **Email**: your.email@example.com
+
 ---
 
-## The Stack
+**Built with ❤️ by [Your Name]**
 
-I picked tools that actually work well together:
-
-- **Backend**: FastAPI + SQLAlchemy + Celery + LangGraph
-- **Frontend**: Next.js 15 + React Flow + Tailwind
-- **AI**: Ollama for local, extensible to OpenAI/Anthropic
-- **Infra**: Docker, K8s, Helm, Terraform
-- **Monitoring**: Prometheus, Grafana, MLflow, OpenTelemetry
-
----
-
-## Docs
-
-| Doc | What's in it |
-|-----|--------------|
-| [Architecture](DOCS/ARCHITECTURE.md) | How the pieces fit together |
-| [Deployment](DOCS/DEPLOYMENT.md) | Getting it running anywhere |
-| [API Reference](DOCS/API.md) | Endpoint details |
-| [Changelog](DOCS/CHANGELOG.md) | What changed when |
-
----
-
-## What's Next
-
-This is v0.5 Beta. It works, but there's more coming:
-- Auth & multi-tenancy
-- Agent versioning
-- More tools (web scraping, SQL, etc.)
-- Visual debugging right in the canvas
-
----
-
-## License
-
-MIT. Do what you want with it.
-
----
-
-**Aditya Shenvi © 2025-26**
+⭐ Star us on GitHub if you find this project useful!

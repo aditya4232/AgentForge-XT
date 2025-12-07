@@ -1,0 +1,26 @@
+{
+    "name": "agentforge-xt",
+    "version": "1.0.0",
+    "description": "Visual Multi-Agent Workflow Builder",
+    "scripts": {
+        "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+        "dev:frontend": "cd frontend && npm run dev",
+        "dev:backend": "cd backend && uvicorn main:app --reload",
+        "build": "cd frontend && npm run build",
+        "start": "cd frontend && npm run start",
+        "lint": "cd frontend && npm run lint"
+    },
+    "keywords": [
+        "ai",
+        "agents",
+        "multi-agent",
+        "crewai",
+        "workflow",
+        "automation"
+    ],
+    "author": "Your Name",
+    "license": "MIT",
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    }
+}
