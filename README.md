@@ -1,169 +1,167 @@
-# AgentForge-XT 🚀
+# 🚀 FlowForge - Modern Workflow Automation Platform
 
-**Visual Multi-Agent Workflow Builder** - Build AI agent teams with drag-and-drop simplicity.
+<div align="center">
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688)](https://fastapi.tiangolo.com/)
-[![CrewAI](https://img.shields.io/badge/CrewAI-Latest-blue)](https://www.crewai.com/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+![FlowForge Banner](https://img.shields.io/badge/FlowForge-Workflow%20Automation-8B5CF6?style=for-the-badge&logo=workflow&logoColor=white)
 
-## 🌟 What Makes Us Unique
+**Build, automate, and scale your workflows with our visual automation platform.**
 
-AgentForge-XT is the **first visual multi-agent builder** that lets you create AI agent teams without writing code. Watch agents collaborate, debate, and solve complex tasks in real-time.
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-Auth-FFCA28?style=flat-square&logo=firebase)](https://firebase.google.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com/)
 
-### Key Features
+[Demo](https://flowforge.vercel.app) · [Documentation](#documentation) · [Report Bug](https://github.com/aditya4232/flowforge/issues)
 
-- 🎨 **Visual Agent Builder** - Drag-and-drop interface powered by React Flow
-- 🤖 **Multi-Agent Collaboration** - Agents work together using CrewAI
-- ⚡ **100% Free Tier** - Groq, Supabase, Qdrant Cloud, Clerk, Vercel
-- 📊 **Real-Time Dashboard** - Watch agents think and collaborate live
-- 🏪 **Template Marketplace** - Pre-built agent teams ready to use
-- 🔐 **Enterprise Auth** - Clerk with social logins and MFA
-- 🧠 **Vector Memory** - RAG-powered context-aware agents
+</div>
+
+---
+
+## ✨ Features
+
+- 🎨 **Visual Workflow Builder** - Drag-and-drop interface with React Flow
+- 🔐 **Enterprise Authentication** - Firebase Auth with Google & GitHub SSO
+- 📊 **Real-time Execution** - Live workflow execution with detailed logs
+- 🌙 **Dark Mode First** - Beautiful glassmorphism UI with animations
+- 📱 **Responsive Design** - Works on desktop and tablet
+- 🚀 **Production Ready** - Optimized for Vercel deployment
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | Next.js 14 (App Router), React 18 |
+| **Styling** | Tailwind CSS, Framer Motion |
+| **Canvas** | React Flow |
+| **Auth** | Firebase Authentication |
+| **Database** | Supabase (PostgreSQL) |
+| **Deployment** | Vercel |
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ and npm
-- Python 3.11+
-- Git
+- Node.js 18+ 
+- npm or yarn
+- Firebase project
+- Supabase project
 
-### 1. Clone the Repository
+### Installation
 
-```bash
-git clone https://github.com/yourusername/AgentForge-XT.git
-cd AgentForge-XT
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/aditya4232/flowforge.git
+   cd flowforge
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables**
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Fill in your Firebase and Supabase credentials in `.env.local`
+
+4. **Set up Supabase database**
+   - Go to Supabase Dashboard > SQL Editor
+   - Run the contents of `supabase/schema.sql`
+
+5. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open in browser**
+   ```
+   http://localhost:3000
+   ```
+
+## 📁 Project Structure
+
+```
+flowforge/
+├── src/
+│   ├── app/                    # Next.js App Router pages
+│   │   ├── auth/               # Authentication pages
+│   │   ├── dashboard/          # Dashboard page
+│   │   ├── workflow/           # Workflow builder
+│   │   ├── layout.tsx          # Root layout
+│   │   └── page.tsx            # Landing page
+│   ├── components/             # React components
+│   │   ├── auth-provider.tsx   # Firebase auth context
+│   │   └── providers.tsx       # App providers
+│   └── lib/                    # Utilities
+│       ├── firebase.ts         # Firebase config
+│       ├── supabase.ts         # Supabase client
+│       └── utils.ts            # Helper functions
+├── supabase/
+│   └── schema.sql              # Database schema
+├── public/                     # Static assets
+└── tailwind.config.ts          # Tailwind configuration
 ```
 
-### 2. Set Up Environment Variables
+## 🔧 Configuration
 
-```bash
-# Copy example env files
-cp .env.example .env.local
-cp backend/.env.example backend/.env
-```
+### Firebase Setup
 
-Edit `.env.local` and `backend/.env` with your API keys:
+1. Create a new Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
+2. Enable Authentication > Sign-in methods:
+   - Google
+   - GitHub (requires GitHub OAuth app)
+3. Copy your Firebase config to `.env.local`
 
-```env
-# Get free API keys from:
-# Groq: https://console.groq.com
-# Clerk: https://clerk.com
-# Supabase: https://supabase.com
-# Qdrant: https://cloud.qdrant.io
-```
+### Supabase Setup
 
-### 3. Install Dependencies
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Run the SQL in `supabase/schema.sql` in the SQL Editor
+3. Copy your API credentials to `.env.local`
 
-```bash
-# Frontend
-npm install
+## 🚀 Deployment
 
-# Backend
-cd backend
-pip install -r requirements.txt
-```
+### Deploy to Vercel
 
-### 4. Run Development Servers
+1. Push your code to GitHub
+2. Import the repository in Vercel
+3. Add environment variables in Vercel dashboard
+4. Deploy!
 
-```bash
-# Terminal 1 - Frontend
-npm run dev
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/aditya4232/flowforge)
 
-# Terminal 2 - Backend
-cd backend
-uvicorn main:app --reload
-```
+## 📝 Environment Variables
 
-Visit **http://localhost:3000** 🎉
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase API key |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase sender ID |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase app ID |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
 
-## 📦 Tech Stack
+## 👨‍💻 Author
 
-### Frontend
-- **Next.js 15** - React framework with App Router
-- **TypeScript** - Type safety
-- **Tailwind CSS 4** - Styling
-- **shadcn/ui** - UI components
-- **Tremor** - Dashboard components
-- **TanStack Query** - Server state management
-- **React Flow** - Visual workflow builder
-- **Clerk** - Authentication
+**Aditya Shenvi**
 
-### Backend
-- **FastAPI** - Python async framework
-- **CrewAI** - Multi-agent orchestration
-- **Groq** - Free LLM inference
-- **Supabase** - PostgreSQL database
-- **Qdrant** - Vector database
-- **Redis** - Caching & queues
-
-## 🎯 Use Cases
-
-### Pre-built Agent Teams
-
-1. **Blog Writer Team**
-   - Researcher → Writer → SEO Optimizer
-   - Perfect for content creation
-
-2. **Code Review Team**
-   - Coder → Security Reviewer → Performance Optimizer
-   - Automated code quality checks
-
-3. **Market Research Team**
-   - Data Collector → Analyst → Report Writer
-   - Business intelligence automation
-
-4. **Customer Support Team**
-   - Ticket Classifier → Responder → Quality Checker
-   - Automated support workflows
-
-## 📖 Documentation
-
-- [Getting Started](docs/getting-started.md)
-- [Building Your First Agent Team](docs/first-agent-team.md)
-- [API Reference](docs/api-reference.md)
-- [Deployment Guide](docs/deployment.md)
-
-## 🚢 Deployment
-
-### Vercel (Frontend)
-
-```bash
-vercel --prod
-```
-
-### Railway (Backend)
-
-```bash
-railway up
-```
-
-See [Deployment Guide](docs/deployment.md) for detailed instructions.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md).
+- LinkedIn: [@aditya-shenvi](https://linkedin.com/in/aditya-shenvi)
+- GitHub: [@aditya4232](https://github.com/aditya4232)
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [CrewAI](https://www.crewai.com/) - Multi-agent framework
-- [Groq](https://groq.com/) - Lightning-fast LLM inference
-- [shadcn/ui](https://ui.shadcn.com/) - Beautiful components
-- [Tremor](https://tremor.so/) - Dashboard components
-
-## 📧 Contact
-
-- **Twitter**: [@yourusername](https://twitter.com/yourusername)
-- **LinkedIn**: [Your Name](https://linkedin.com/in/yourprofile)
-- **Email**: your.email@example.com
+This project is licensed under the MIT License.
 
 ---
 
-**Built with ❤️ by [Your Name]**
+<div align="center">
 
-⭐ Star us on GitHub if you find this project useful!
+**Built with ❤️ for Final Year Project**
+
+⭐ Star this repo if you found it helpful!
+
+</div>
