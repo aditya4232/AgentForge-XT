@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState, useRef, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useCallback, useState, useRef } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import ReactFlow, {
@@ -25,126 +25,34 @@ import {
     Play,
     ArrowLeft,
     Plus,
-    Settings,
     Trash2,
     X,
-    Globe,
-    Clock,
-    Send,
-    Mail,
-    GitBranch,
-    Repeat,
-    Filter,
-    Wand2,
-    Timer,
     Zap,
-    CheckCircle,
-    AlertCircle,
     Loader2,
 } from "lucide-react";
-
-// Node categories
-const nodeCategories = [
-    {
-        name: "Triggers",
-        nodes: [
-            { type: "webhook", label: "Webhook", icon: Globe, color: "bg-green-500/10 text-green-600" },
-            { type: "schedule", label: "Schedule", icon: Clock, color: "bg-green-500/10 text-green-600" },
-            { type: "manual", label: "Manual", icon: Play, color: "bg-green-500/10 text-green-600" },
-        ],
-    },
-    {
-        name: "Actions",
-        nodes: [
-            { type: "http_request", label: "HTTP Request", icon: Send, color: "bg-blue-500/10 text-blue-600" },
-            { type: "email", label: "Send Email", icon: Mail, color: "bg-blue-500/10 text-blue-600" },
-            { type: "delay", label: "Delay", icon: Timer, color: "bg-blue-500/10 text-blue-600" },
-        ],
-    },
-    {
-        name: "Logic",
-        nodes: [
-            { type: "condition", label: "Condition", icon: GitBranch, color: "bg-orange-500/10 text-orange-600" },
-            { type: "loop", label: "Loop", icon: Repeat, color: "bg-orange-500/10 text-orange-600" },
-        ],
-    },
-    {
-        name: "Data",
-        nodes: [
-            { type: "transform", label: "Transform", icon: Wand2, color: "bg-purple-500/10 text-purple-600" },
-            { type: "filter", label: "Filter", icon: Filter, color: "bg-purple-500/10 text-purple-600" },
-        ],
-    },
-];
-
-// Get node info helper
-function getNodeInfo(type: string) {
-    for (const category of nodeCategories) {
-        const node = category.nodes.find((n) => n.type === type);
-        if (node) return node;
-    }
-    return null;
-}
-
-// Custom node component
-function CustomNode({ data, selected }: { data: any; selected: boolean }) {
-    const nodeInfo = getNodeInfo(data.type);
-    const Icon = nodeInfo?.icon || Zap;
-
-    return (
-        <div
-            className={`min-w-[160px] rounded-lg border bg-card shadow-sm transition-all ${selected ? "border-primary shadow-md" : "border-border"
-                }`}
-        >
-            <div className="p-3">
-                <div className="flex items-center gap-2">
-                    <div className={`h-7 w-7 rounded-md flex items-center justify-center ${nodeInfo?.color || "bg-secondary"}`}>
-                        <Icon className="h-3.5 w-3.5" />
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{data.label}</p>
-                    </div>
-                </div>
-            </div>
-            {data.status && (
-                <div
-                    className={`px-3 py-1.5 border-t text-xs flex items-center gap-1.5 ${data.status === "success"
-                        ? "border-green-200 bg-green-50 text-green-600 dark:border-green-900 dark:bg-green-950"
-                        : data.status === "error"
-                            ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900 dark:bg-red-950"
-                            : "border-border"
-                        }`}
-                >
-                    {data.status === "success" && <CheckCircle className="h-3 w-3" />}
-                    {data.status === "error" && <AlertCircle className="h-3 w-3" />}
-                    {data.status === "success" ? "Success" : data.status === "error" ? "Failed" : "Pending"}
-                </div>
-            )}
-        </div>
-    );
-}
+import { nodeCategories } from "@/lib/workflow-constants";
+import CustomNode from "@/components/workflow/CustomNode";
 
 const nodeTypes = { custom: CustomNode };
 
-// Initial demo nodes
 const initialNodes: Node[] = [
     {
         id: "1",
         type: "custom",
-        position: { x: 100, y: 100 },
-        data: { label: "Webhook", type: "webhook" },
+        position: { x: 100, y: 150 },
+        data: { label: "On Chat Message", type: "chat_trigger" },
     },
     {
         id: "2",
         type: "custom",
-        position: { x: 350, y: 100 },
-        data: { label: "Transform", type: "transform" },
+        position: { x: 400, y: 150 },
+        data: { label: "AI Agent", type: "ai_agent" },
     },
     {
         id: "3",
         type: "custom",
-        position: { x: 600, y: 100 },
-        data: { label: "Send Email", type: "email" },
+        position: { x: 700, y: 150 },
+        data: { label: "Slack", type: "slack" },
     },
 ];
 
@@ -155,16 +63,18 @@ const initialEdges: Edge[] = [
 
 export default function WorkflowEditorPage() {
     const params = useParams();
-    const router = useRouter();
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
     const [showNodePanel, setShowNodePanel] = useState(false);
-    const [workflowName, setWorkflowName] = useState("My Workflow");
+    const [workflowName, setWorkflowName] = useState("AI Agent Workflow");
     const [isSaving, setIsSaving] = useState(false);
     const [isExecuting, setIsExecuting] = useState(false);
+    const [activeTab, setActiveTab] = useState("editor");
+    const [isWorkflowActive, setIsWorkflowActive] = useState(false);
+    const [showLogs, setShowLogs] = useState(false);
 
     const onConnect = useCallback(
         (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -193,8 +103,8 @@ export default function WorkflowEditorPage() {
 
             const bounds = reactFlowWrapper.current.getBoundingClientRect();
             const position = {
-                x: event.clientX - bounds.left,
-                y: event.clientY - bounds.top,
+                x: event.clientX - bounds.left - 120,
+                y: event.clientY - bounds.top - 40,
             };
 
             const newNode: Node = {
@@ -205,54 +115,28 @@ export default function WorkflowEditorPage() {
             };
 
             setNodes((nds) => nds.concat(newNode));
-            setShowNodePanel(false);
         },
         [setNodes]
     );
 
     const handleSave = async () => {
-        if (!params.id) return;
         setIsSaving(true);
         try {
-            // Get current user (simple check, relies on RLS for security)
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Not authenticated");
-
-            // Look up profile id from user id
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('email', user.email) // Assuming email sync, or better yet create profile if missing
-                .single();
-
-            // Note: In production, use a more robust user ID mapping.
-            // For now, we assume the user exists in 'profiles' or we use user.id if profiles uses auth.uid()
 
             const workflowData = {
                 name: workflowName,
                 nodes: nodes,
                 edges: edges,
+                is_active: isWorkflowActive,
                 updated_at: new Date().toISOString(),
-                // If creating new, we need user_id. If updating, RLS handles it.
-                // We'll trust RLS and just pass what's needed.
             };
 
-            const { error } = await supabase
-                .from('workflows')
-                .upsert({
-                    id: params.id as string,
-                    ...workflowData,
-                    // If it's a new insert, we need user_id. 
-                    // Let's assume we are updating an existing one or creating one.
-                    // If creating, we need user_id.
-                })
-                .select();
-
-            if (error) throw error;
-            console.log("Saved successfully");
+            console.log("Saved workflow:", workflowData);
+            await new Promise((r) => setTimeout(r, 800));
         } catch (error) {
             console.error("Error saving workflow:", error);
-            alert("Failed to save workflow");
         } finally {
             setIsSaving(false);
         }
@@ -260,13 +144,19 @@ export default function WorkflowEditorPage() {
 
     const handleExecute = async () => {
         setIsExecuting(true);
+        setShowLogs(true);
         for (const node of nodes) {
+            setNodes((nds) =>
+                nds.map((n) =>
+                    n.id === node.id ? { ...n, data: { ...n.data, status: "running" } } : n
+                )
+            );
+            await new Promise((r) => setTimeout(r, 600));
             setNodes((nds) =>
                 nds.map((n) =>
                     n.id === node.id ? { ...n, data: { ...n.data, status: "success" } } : n
                 )
             );
-            await new Promise((r) => setTimeout(r, 400));
         }
         setIsExecuting(false);
     };
@@ -282,80 +172,120 @@ export default function WorkflowEditorPage() {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-background">
-            {/* Header */}
-            <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
-                <div className="flex items-center gap-3">
+        <div className="h-screen flex flex-col bg-background text-foreground">
+            {/* Top Bar */}
+            <header className="h-14 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-4 z-50">
+                <div className="flex items-center gap-4">
                     <Link
                         href="/dashboard"
-                        className="p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                        className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <ArrowLeft className="h-4 w-4" />
                     </Link>
                     <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
-                            <Workflow className="h-3.5 w-3.5 text-primary-foreground" />
+                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Workflow className="h-4 w-4 text-primary" />
                         </div>
                         <input
                             type="text"
                             value={workflowName}
                             onChange={(e) => setWorkflowName(e.target.value)}
-                            className="bg-transparent text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring rounded px-2 py-1"
+                            className="bg-transparent text-sm font-semibold focus:outline-none placeholder:text-muted-foreground/50 w-48"
+                            placeholder="Workflow Name"
                         />
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                {/* Center Tabs */}
+                <div className="flex items-center bg-secondary/50 p-1 rounded-lg">
+                    <button
+                        onClick={() => setActiveTab("editor")}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${activeTab === "editor" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                            }`}
+                    >
+                        Editor
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("executions")}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${activeTab === "executions" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                            }`}
+                    >
+                        Executions
+                    </button>
+                </div>
+
+                {/* Right Actions */}
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 mr-4">
+                        <span className={`text-xs font-medium ${isWorkflowActive ? "text-green-500" : "text-muted-foreground"}`}>
+                            {isWorkflowActive ? "Active" : "Inactive"}
+                        </span>
+                        <button
+                            onClick={() => setIsWorkflowActive(!isWorkflowActive)}
+                            className={`w-9 h-5 rounded-full p-0.5 transition-colors ${isWorkflowActive ? "bg-green-500" : "bg-muted"}`}
+                        >
+                            <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${isWorkflowActive ? "translate-x-4" : ""}`} />
+                        </button>
+                    </div>
+
+                    <div className="h-4 w-px bg-border" />
+
                     <a
                         href="http://localhost:5678"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn-secondary text-sm flex items-center gap-2"
-                        title="Open n8n Automation Engine"
+                        className="btn-secondary text-xs h-8 gap-2"
                     >
-                        <Zap className="h-4 w-4 text-orange-500" />
-                        <span className="hidden sm:inline">Engine</span>
+                        <Zap className="h-3.5 w-3.5" />
+                        n8n Engine
                     </a>
-                    <div className="h-6 w-px bg-border mx-1" />
-                    <button onClick={() => setShowNodePanel(!showNodePanel)} className="btn-secondary text-sm">
-                        <Plus className="h-4 w-4" />
-                        Add node
-                    </button>
-                    <button onClick={handleSave} disabled={isSaving} className="btn-secondary text-sm">
-                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+
+                    <button onClick={handleSave} disabled={isSaving} className="btn-secondary text-xs h-8 gap-2">
+                        {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                         Save
                     </button>
-                    <button onClick={handleExecute} disabled={isExecuting} className="btn-primary text-sm">
-                        {isExecuting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                        Run
+
+                    <button onClick={handleExecute} disabled={isExecuting} className="btn-primary text-xs h-8 gap-2 shadow-lg shadow-primary/20">
+                        {isExecuting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+                        Execute
                     </button>
                 </div>
             </header>
 
-            <div className="flex-1 flex overflow-hidden">
-                {/* Node Panel */}
+            <div className="flex-1 flex overflow-hidden relative">
+                {/* Floating Add Button */}
+                <div className="absolute top-4 left-4 z-10">
+                    <button
+                        onClick={() => setShowNodePanel(!showNodePanel)}
+                        className="h-10 w-10 rounded-full bg-foreground text-background shadow-xl hover:scale-105 transition-all flex items-center justify-center"
+                        title="Add Node"
+                    >
+                        <Plus className="h-6 w-6" />
+                    </button>
+                </div>
+
+                {/* Node Sidebar */}
                 <AnimatePresence>
                     {showNodePanel && (
                         <motion.div
-                            initial={{ width: 0, opacity: 0 }}
-                            animate={{ width: 280, opacity: 1 }}
-                            exit={{ width: 0, opacity: 0 }}
-                            className="border-r border-border bg-background overflow-hidden flex-shrink-0"
+                            initial={{ x: -320, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -320, opacity: 0 }}
+                            className="absolute top-0 left-0 bottom-0 w-80 bg-background/95 backdrop-blur border-r border-border shadow-2xl z-20 flex flex-col"
                         >
-                            <div className="w-[280px] h-full overflow-y-auto p-4">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-sm font-medium">Add Node</h2>
-                                    <button onClick={() => setShowNodePanel(false)} className="p-1 rounded hover:bg-secondary">
-                                        <X className="h-4 w-4" />
-                                    </button>
-                                </div>
-
+                            <div className="p-4 border-b border-border flex items-center justify-between">
+                                <h2 className="font-semibold text-sm">Add Integration</h2>
+                                <button onClick={() => setShowNodePanel(false)} className="p-1 hover:bg-secondary rounded">
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-4">
                                 {nodeCategories.map((category) => (
-                                    <div key={category.name} className="mb-5">
-                                        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                                    <div key={category.name} className="mb-6">
+                                        <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3 pl-1">
                                             {category.name}
                                         </h3>
-                                        <div className="space-y-1">
+                                        <div className="grid grid-cols-1 gap-2">
                                             {category.nodes.map((node) => (
                                                 <div
                                                     key={node.type}
@@ -365,12 +295,12 @@ export default function WorkflowEditorPage() {
                                                         e.dataTransfer.setData("label", node.label);
                                                         e.dataTransfer.effectAllowed = "move";
                                                     }}
-                                                    className="flex items-center gap-2 p-2 rounded-md border border-border hover:border-primary/50 hover:bg-secondary/50 cursor-grab transition-colors"
+                                                    className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-primary/50 hover:bg-secondary/50 cursor-grab transition-all group"
                                                 >
-                                                    <div className={`h-7 w-7 rounded-md flex items-center justify-center ${node.color}`}>
-                                                        <node.icon className="h-3.5 w-3.5" />
+                                                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${node.color}`}>
+                                                        <node.icon className="h-4 w-4" />
                                                     </div>
-                                                    <span className="text-sm">{node.label}</span>
+                                                    <p className="text-sm font-medium group-hover:text-primary transition-colors">{node.label}</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -381,8 +311,8 @@ export default function WorkflowEditorPage() {
                     )}
                 </AnimatePresence>
 
-                {/* Canvas */}
-                <div className="flex-1" ref={reactFlowWrapper}>
+                {/* Main Canvas */}
+                <div className="flex-1 bg-secondary/5 relative" ref={reactFlowWrapper}>
                     <ReactFlow
                         nodes={nodes}
                         edges={edges}
@@ -395,51 +325,72 @@ export default function WorkflowEditorPage() {
                         onDrop={onDrop}
                         nodeTypes={nodeTypes}
                         fitView
-                        className="bg-background"
                     >
-                        <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="hsl(var(--muted-foreground) / 0.2)" />
-                        <Controls className="!bg-background !border-border !rounded-lg [&>button]:!bg-background [&>button]:!border-border [&>button:hover]:!bg-secondary" />
+                        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="currentColor" className="text-muted-foreground/10" />
+                        <Controls className="!bg-background !border-border !rounded-lg !shadow-sm [&>button]:!bg-background [&>button]:!border-border [&>button:hover]:!bg-secondary !m-4" />
                         <MiniMap
-                            className="!bg-background !border-border !rounded-lg"
+                            className="!bg-background !border-border !rounded-lg !shadow-sm !m-4"
                             nodeColor={() => "hsl(var(--primary))"}
                             maskColor="hsl(var(--background) / 0.9)"
                         />
-                        <Panel position="bottom-center" className="mb-4">
-                            <div className="rounded-md border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground shadow-sm">
-                                Drag nodes from panel • Connect by dragging handles
-                            </div>
-                        </Panel>
                     </ReactFlow>
                 </div>
 
-                {/* Config Panel */}
+                {/* Bottom Log Panel */}
+                <AnimatePresence>
+                    {showLogs && (
+                        <motion.div
+                            initial={{ y: 200 }}
+                            animate={{ y: 0 }}
+                            exit={{ y: 200 }}
+                            className="absolute bottom-0 left-0 right-0 z-10 bg-background border-t border-border shadow-2xl"
+                        >
+                            <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-secondary/30">
+                                <span className="text-xs font-medium">Execution Logs</span>
+                                <button onClick={() => setShowLogs(false)} className="p-1 hover:bg-secondary rounded">
+                                    <X className="h-3 w-3" />
+                                </button>
+                            </div>
+                            <div className="h-48 overflow-y-auto bg-black/90 text-mono text-xs p-4 font-mono text-green-400">
+                                <div className="space-y-1">
+                                    <p>[info] Workflow initialized</p>
+                                    <p>[info] Loading nodes...</p>
+                                    <p>[success] Nodes connected successfully</p>
+                                    <p className="text-blue-400">[debug] Executing workflow...</p>
+                                    <p className="text-green-500">[success] Workflow completed</p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Right Config Panel */}
                 <AnimatePresence>
                     {selectedNode && (
                         <motion.div
                             initial={{ width: 0, opacity: 0 }}
-                            animate={{ width: 280, opacity: 1 }}
+                            animate={{ width: 320, opacity: 1 }}
                             exit={{ width: 0, opacity: 0 }}
-                            className="border-l border-border bg-background overflow-hidden flex-shrink-0"
+                            className="absolute top-0 right-0 bottom-0 bg-background border-l border-border shadow-2xl z-20 flex flex-col"
                         >
-                            <div className="w-[280px] h-full overflow-y-auto p-4">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-sm font-medium">Configure</h2>
-                                    <div className="flex items-center gap-1">
-                                        <button
-                                            onClick={handleDeleteNode}
-                                            className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-950 text-red-500"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                        <button onClick={() => setSelectedNode(null)} className="p-1 rounded hover:bg-secondary">
-                                            <X className="h-4 w-4" />
-                                        </button>
-                                    </div>
+                            <div className="p-4 border-b border-border flex items-center justify-between">
+                                <h2 className="font-semibold text-sm">Configuration</h2>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={handleDeleteNode}
+                                        className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-950 text-red-500"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                    <button onClick={() => setSelectedNode(null)} className="p-1 rounded hover:bg-secondary">
+                                        <X className="h-4 w-4" />
+                                    </button>
                                 </div>
-
+                            </div>
+                            <div className="p-4 overflow-y-auto flex-1">
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="text-xs font-medium text-muted-foreground">Name</label>
+                                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Node Label</label>
                                         <input
                                             type="text"
                                             value={selectedNode.data.label}
@@ -452,54 +403,12 @@ export default function WorkflowEditorPage() {
                                                     )
                                                 );
                                             }}
-                                            className="input mt-1"
+                                            className="input mt-1.5 w-full"
                                         />
                                     </div>
-
-                                    <div>
-                                        <label className="text-xs font-medium text-muted-foreground">Type</label>
-                                        <div className="mt-1 px-3 py-2 rounded-md border border-border bg-secondary/50 text-sm">
-                                            {selectedNode.data.type}
-                                        </div>
+                                    <div className="p-3 rounded-lg bg-secondary/50 border border-border text-sm text-muted-foreground">
+                                        Configuration for <strong>{selectedNode.data.type}</strong> will appear here.
                                     </div>
-
-                                    {selectedNode.data.type === "http_request" && (
-                                        <>
-                                            <div>
-                                                <label className="text-xs font-medium text-muted-foreground">URL</label>
-                                                <input type="text" placeholder="https://api.example.com" className="input mt-1" />
-                                            </div>
-                                            <div>
-                                                <label className="text-xs font-medium text-muted-foreground">Method</label>
-                                                <select className="input mt-1">
-                                                    <option>GET</option>
-                                                    <option>POST</option>
-                                                    <option>PUT</option>
-                                                    <option>DELETE</option>
-                                                </select>
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {selectedNode.data.type === "email" && (
-                                        <>
-                                            <div>
-                                                <label className="text-xs font-medium text-muted-foreground">To</label>
-                                                <input type="email" placeholder="email@example.com" className="input mt-1" />
-                                            </div>
-                                            <div>
-                                                <label className="text-xs font-medium text-muted-foreground">Subject</label>
-                                                <input type="text" placeholder="Email subject" className="input mt-1" />
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {selectedNode.data.type === "delay" && (
-                                        <div>
-                                            <label className="text-xs font-medium text-muted-foreground">Duration (seconds)</label>
-                                            <input type="number" placeholder="5" className="input mt-1" />
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </motion.div>

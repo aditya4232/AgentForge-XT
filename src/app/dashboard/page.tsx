@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
 import { signOut } from "@/lib/firebase";
+import { supabase } from "@/lib/supabase";
 import {
     Workflow,
     Plus,
@@ -21,32 +22,8 @@ import {
 } from "lucide-react";
 
 // Mock data
-const workflows = [
-    {
-        id: "1",
-        name: "Slack Notification on New User",
-        description: "Send a welcome message when a new user signs up",
-        is_active: true,
-        updated_at: "2024-12-07T10:30:00Z",
-        executions: 156,
-    },
-    {
-        id: "2",
-        name: "Daily Report Generator",
-        description: "Generate and email daily analytics report",
-        is_active: true,
-        updated_at: "2024-12-06T18:00:00Z",
-        executions: 30,
-    },
-    {
-        id: "3",
-        name: "GitHub Issue to Notion",
-        description: "Sync GitHub issues to Notion database",
-        is_active: false,
-        updated_at: "2024-12-05T09:15:00Z",
-        executions: 89,
-    },
-];
+// Mock data removed
+
 
 const stats = [
     { label: "Total Workflows", value: "3", icon: Workflow },
@@ -65,12 +42,45 @@ const navItems = [
 export default function DashboardPage() {
     const { user, loading } = useAuth();
     const router = useRouter();
+    const [workflows, setWorkflows] = useState<any[]>([]);
+    const [isLoadingData, setIsLoadingData] = useState(true);
 
     useEffect(() => {
         if (!loading && !user) {
             router.push("/auth/sign-in");
+            return;
+        }
+
+        if (user) {
+            fetchWorkflows();
         }
     }, [user, loading, router]);
+
+    const fetchWorkflows = async () => {
+        try {
+            // Get profile ID first (assuming profile exists linked to user email)
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('email', user?.email)
+                .single();
+
+            if (profile) {
+                const { data, error } = await supabase
+                    .from('workflows')
+                    .select('*')
+                    .eq('user_id', profile.id)
+                    .order('updated_at', { ascending: false });
+
+                if (error) throw error;
+                setWorkflows(data || []);
+            }
+        } catch (error) {
+            console.error("Error fetching workflows:", error);
+        } finally {
+            setIsLoadingData(false);
+        }
+    };
 
     const handleSignOut = async () => {
         await signOut();
@@ -111,8 +121,8 @@ export default function DashboardPage() {
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${item.active
-                                        ? "bg-secondary text-foreground font-medium"
-                                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                                    ? "bg-secondary text-foreground font-medium"
+                                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                                     }`}
                             >
                                 <item.icon className="h-4 w-4" />
@@ -210,8 +220,8 @@ export default function DashboardPage() {
                                     <div className="flex items-center gap-3 min-w-0">
                                         <div
                                             className={`h-8 w-8 rounded-md flex items-center justify-center ${workflow.is_active
-                                                    ? "bg-green-500/10 text-green-600"
-                                                    : "bg-secondary text-muted-foreground"
+                                                ? "bg-green-500/10 text-green-600"
+                                                : "bg-secondary text-muted-foreground"
                                                 }`}
                                         >
                                             <Workflow className="h-4 w-4" />
