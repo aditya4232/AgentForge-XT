@@ -1,85 +1,127 @@
 # AgentForge-XT
 
-> **Aditya Shenvi © 2025-26**
+> Built by **Aditya Shenvi** | v0.5 Beta
 
-**Tagline:** A cloud-native playground for designing, deploying, and monitoring multi-agent AI systems.
+So you want to build AI agents that actually work in production? Same. That's why I built AgentForge-XT.
 
-![AgentForge Architecture](https://placehold.co/800x400?text=AgentForge+Architecture)
-
----
-
-## 👋 Welcome to AgentForge-XT
-
-Hi there! Welcome to **AgentForge-XT**. If you've ever wanted to build complex multi-agent AI systems without getting lost in spaghetti code or managing a dozen different services manually, you're in the right place.
-
-We built AgentForge to be a **robust, production-ready platform** that feels great to use. Whether you're running it on your laptop to experiment with local LLMs (like Llama 3) or deploying it to a Kubernetes cluster for scale, everything is designed to be rigorous yet accessible.
-
-### 🚀 What features do we have?
-
--   **Visual Agent Builder**: Use our drag-and-drop Canvas to map out how your agents think. Connect inputs to LLMs, tools, and decision nodes visually.
--   **Robust Runtime**: We use **LangGraph** under the hood combined with **Celery** workers. This means your agents run asynchronously and robustly.
--   **Observability**: We've baked in **Prometheus, Grafana, and MLflow**. You can see exactly how long each step takes, what the LLM output was, and track performance over time.
--   **AI Integration**: Native support for **Ollama** (local LLMs) so you don't need expensive API keys to start testing.
+It's a full-stack platform where you can visually design agent workflows, run them without your API hanging forever, and actually see what's happening under the hood. No more "it works on my machine" nonsense.
 
 ---
 
-## 📚 Documentation
+## Why I Built This
 
-We have detailed documentation available in the `docs/` folder:
+I got tired of:
+- Writing spaghetti code to connect agents together
+- Having my backend freeze while waiting for LLM responses  
+- Not knowing why my agent decided to do something weird
+- Paying for API calls just to test basic flows
 
--   [**Architecture**](docs/ARCHITECTURE.md): Deep dive into the system design, components, and data flow.
--   [**Deployment Guide**](docs/DEPLOYMENT.md): Instructions for Local, Docker, and Kubernetes deployments.
--   [**API Reference**](docs/API.md): Guide to the backend REST API endpoints.
--   [**Performance Report**](docs/performance_report.md): Latest automated benchmark results.
+So I made something that solves all of that.
 
 ---
 
-## 🛠️ Quick Start
+## What You Get
 
-Want to see it in action? Let's get you set up in minutes.
+**Visual Builder** — Drag nodes, connect edges, done. Your agent logic is a graph, not a mess of function calls.
 
-### 1. Installation
+**Async Everything** — Celery workers handle execution. Your API stays responsive. Users don't stare at spinners.
 
-We've provided a helper script to get you started quickly on Windows:
+**Local LLMs** — Ollama integration out of the box. Test with Llama, Mistral, whatever. Zero API costs during dev.
 
-```cmd
-scripts\install.bat
-```
+**See What's Happening** — Prometheus metrics, Grafana dashboards, MLflow traces. When something breaks, you'll know why.
 
-Or manually:
-1. `cd backend && python -m venv venv && pip install -r requirements.txt`
-2. `cd frontend && npm install`
+**Actually Deploys** — Docker Compose for local, Helm charts for K8s, Terraform for infra. Not just a demo.
 
-### 2. Running Local Dev
+---
 
-The entire stack can be launched with Docker Compose:
+## Get It Running
+
+You need Docker. That's basically it.
 
 ```bash
 docker-compose up --build
 ```
 
-*Grab a coffee ☕. The first build installs everything.*
+First build takes a few minutes (grab coffee ☕). Then hit these URLs:
 
-### 3. Verification
+- **UI**: http://localhost:3000  
+- **API Docs**: http://localhost:8000/docs  
+- **Grafana**: http://localhost:3001 (admin/admin)
+- **MLflow**: http://localhost:5000
 
-To run our automated test suite and benchmarks:
+---
 
-```cmd
-scripts\run_tests.bat
+## Project Layout
+
+```
+AgentForge-XT/
+├── backend/          # FastAPI app + Celery workers
+├── frontend/         # Next.js 15 interface
+├── helm/             # K8s deployment charts
+├── terraform/        # Cloud infra (AWS starter)
+├── observability/    # Prometheus/Grafana configs
+├── scripts/          # Utility scripts
+├── DOCS/             # You're reading these
+└── docker-compose.yml
 ```
 
 ---
 
-## 🔗 Stack Links
+## Run the Tests
 
-Once running, access the services here:
+Backend:
+```bash
+cd backend
+python -m venv venv && venv\Scripts\activate
+pip install -r requirements.txt
+pytest tests/ -v
+```
 
--   **Frontend UI**: [http://localhost:3000](http://localhost:3000)
--   **Backend API**: [http://localhost:8000/docs](http://localhost:8000/docs)
--   **Grafana**: [http://localhost:3001](http://localhost:3001)
--   **MLflow**: [http://localhost:5000](http://localhost:5000)
+Frontend:
+```bash
+cd frontend
+npm install && npm run build
+```
+
+---
+
+## The Stack
+
+I picked tools that actually work well together:
+
+- **Backend**: FastAPI + SQLAlchemy + Celery + LangGraph
+- **Frontend**: Next.js 15 + React Flow + Tailwind
+- **AI**: Ollama for local, extensible to OpenAI/Anthropic
+- **Infra**: Docker, K8s, Helm, Terraform
+- **Monitoring**: Prometheus, Grafana, MLflow, OpenTelemetry
+
+---
+
+## Docs
+
+| Doc | What's in it |
+|-----|--------------|
+| [Architecture](DOCS/ARCHITECTURE.md) | How the pieces fit together |
+| [Deployment](DOCS/DEPLOYMENT.md) | Getting it running anywhere |
+| [API Reference](DOCS/API.md) | Endpoint details |
+| [Changelog](DOCS/CHANGELOG.md) | What changed when |
+
+---
+
+## What's Next
+
+This is v0.5 Beta. It works, but there's more coming:
+- Auth & multi-tenancy
+- Agent versioning
+- More tools (web scraping, SQL, etc.)
+- Visual debugging right in the canvas
+
+---
+
+## License
+
+MIT. Do what you want with it.
 
 ---
 
 **Aditya Shenvi © 2025-26**
-*MIT License*

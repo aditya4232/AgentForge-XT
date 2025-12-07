@@ -1,24 +1,50 @@
 @echo off
-echo ==========================================
-echo AgentForge-XT Installation Script
-echo ==========================================
+echo.
+echo ========================================
+echo   AgentForge-XT Installer
+echo   v0.5 Beta
+echo ========================================
+echo.
 
-echo [1/3] Creating Backend Virtual Environment...
+echo [1/2] Setting up Backend...
+echo.
 cd backend
-python -m venv venv
-call venv\Scripts\activate
+
+if exist venv (
+    echo Virtual environment already exists, skipping...
+) else (
+    echo Creating virtual environment...
+    python -m venv venv
+)
+
 echo Installing Python dependencies...
+call venv\Scripts\activate
 pip install -r requirements.txt
 cd ..
 
-echo [2/3] Installing Frontend Dependencies...
+echo.
+echo [2/2] Setting up Frontend...
+echo.
 cd frontend
-call npm install
+
+if exist node_modules (
+    echo Node modules already exist, skipping...
+) else (
+    echo Installing npm packages...
+    npm install --legacy-peer-deps
+)
 cd ..
 
-echo ==========================================
-echo Installation Complete!
-echo Run 'scripts\run_tests.bat' to verify.
-echo Run 'docker-compose up --build' to start.
-echo ==========================================
+echo.
+echo ========================================
+echo   Installation Complete!
+echo ========================================
+echo.
+echo To start the full stack:
+echo   docker-compose up --build
+echo.
+echo Or run individually:
+echo   Backend:  cd backend ^&^& venv\Scripts\activate ^&^& uvicorn app.main:app --reload
+echo   Frontend: cd frontend ^&^& npm run dev
+echo.
 pause

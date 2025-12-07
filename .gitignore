@@ -51,3 +51,9 @@ mlflow.db
 celerybeat-schedule
 postgres_data/
 ollama_data/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.log

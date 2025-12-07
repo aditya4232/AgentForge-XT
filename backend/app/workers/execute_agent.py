@@ -1,48 +1,69 @@
-from app.workers.celery_app import celery_app
-from app.services.langgraph_engine import LangGraphEngine
+"""
+Agent Execution Worker
+Runs agent workflows asynchronously via Celery.
+"""
+import asyncio
+import datetime
+import os
+
+import mlflow
+from sqlalchemy import update
+
 from app.db import AsyncSessionLocal
 from app.models.models import Run
-from sqlalchemy import select, update
-from sqlalchemy.orm import selectinload
-import asyncio
-import mlflow
-import os
-import datetime
+from app.services.langgraph_engine import LangGraphEngine
+from app.workers.celery_app import celery_app
 
-MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow:5000")
+# MLflow setup for experiment tracking
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
+
 async def run_agent_async(run_id: str, agent_graph: dict, input_data: dict):
-    # Setup MLflow
-    mlflow.set_experiment("agent_runs")
+    """
+    Actually execute an agent graph. This is the async core that does the work.
+    
+    Steps:
+    1. Mark run as "running" in DB
+    2. Build LangGraph from JSON definition
+    3. Execute the graph with user input
+    4. Save results and update status
+    5. Log everything to MLflow
+    """
+    mlflow.set_experiment("agentforge_runs")
     
     async with AsyncSessionLocal() as db:
-        run_record = None
         try:
-            with mlflow.start_run(run_name=f"run_{run_id}") as mlrun:
-                # Update status to running
+            with mlflow.start_run(run_name=f"run_{run_id[:8]}"):
+                # Mark as running
                 await db.execute(
                     update(Run).where(Run.id == run_id).values(status="running")
                 )
                 await db.commit()
                 
-                # Build Engine
+                # Build the graph
                 engine = LangGraphEngine(agent_graph)
                 app = engine.build()
                 
-                # Execute
+                # Run it
                 user_input = input_data.get("input", "")
-                result = await app.ainvoke({"input": user_input, "intermediate_steps": []})
+                result = await app.ainvoke({
+                    "input": user_input,
+                    "intermediate_steps": []
+                })
                 
-                # Parse output
-                output_data = {"result": result.get("output", ""), "state": str(result)}
+                # Package the output
+                output_data = {
+                    "result": result.get("output", ""),
+                    "steps": result.get("intermediate_steps", [])
+                }
                 
-                # Log to MLflow
-                mlflow.log_param("input", user_input)
+                # Log to MLflow for later analysis
+                mlflow.log_param("input", user_input[:500])  # Truncate long inputs
                 mlflow.log_param("status", "completed")
                 mlflow.log_dict(output_data, "output.json")
                 
-                # Update DB
+                # Update DB with success
                 await db.execute(
                     update(Run).where(Run.id == run_id).values(
                         status="completed",
@@ -52,13 +73,16 @@ async def run_agent_async(run_id: str, agent_graph: dict, input_data: dict):
                     )
                 )
                 await db.commit()
-
+                
         except Exception as e:
-            print(f"Error executing agent: {e}")
+            # Something went wrong - log it and mark as failed
+            error_msg = str(e)
+            print(f"Agent execution failed: {error_msg}")
+            
             await db.execute(
                 update(Run).where(Run.id == run_id).values(
                     status="failed",
-                    logs=[str(e)],
+                    logs=[f"Error: {error_msg}"],
                     completed_at=datetime.datetime.now(datetime.timezone.utc)
                 )
             )
@@ -66,12 +90,20 @@ async def run_agent_async(run_id: str, agent_graph: dict, input_data: dict):
 
 
 @celery_app.task(name="app.workers.execute_agent.execute_agent_task")
-def execute_agent_task(run_id, agent_graph, input_data):
-    # Bridge sync Celery to key pieces of async code
-    loop = asyncio.get_event_loop()
-    if loop.is_closed():
+def execute_agent_task(run_id: str, agent_graph: dict, input_data: dict):
+    """
+    Celery task wrapper. Celery is sync, so we bridge to async here.
+    """
+    # Get or create event loop
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_closed():
+            raise RuntimeError("Loop closed")
+    except RuntimeError:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
     
+    # Run the async function
     loop.run_until_complete(run_agent_async(run_id, agent_graph, input_data))
-    return f"Run {run_id} finished"
+    
+    return f"Run {run_id} complete"
