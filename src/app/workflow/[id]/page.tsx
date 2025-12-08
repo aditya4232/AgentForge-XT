@@ -3,7 +3,6 @@
 import { useCallback, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
 import ReactFlow, {
     Node,
     Edge,
@@ -122,9 +121,8 @@ export default function WorkflowEditorPage() {
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("Not authenticated");
-
+            // For now, just log the workflow data
+            // In production with Supabase configured, save to database
             const workflowData = {
                 name: workflowName,
                 nodes: nodes,

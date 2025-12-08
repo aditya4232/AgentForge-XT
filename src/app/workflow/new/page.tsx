@@ -53,6 +53,14 @@ const nodeCategories = [
         ],
     },
     {
+        name: "AI",
+        nodes: [
+            { type: "ai_chat", label: "AI Chat", icon: Sparkles, color: "bg-violet-500/10 text-violet-600" },
+            { type: "ai_embedding", label: "Embeddings", icon: Zap, color: "bg-violet-500/10 text-violet-600" },
+            { type: "ai_rag", label: "RAG Query", icon: Sparkles, color: "bg-violet-500/10 text-violet-600" },
+        ],
+    },
+    {
         name: "Actions",
         nodes: [
             { type: "http_request", label: "HTTP Request", icon: Send, color: "bg-blue-500/10 text-blue-600" },
@@ -561,6 +569,69 @@ export default function NewWorkflowPage() {
                                             <label className="text-xs font-medium text-muted-foreground">Condition</label>
                                             <input type="text" placeholder="{{data.status}} === 'active'" className="input mt-1" />
                                         </div>
+                                    )}
+
+                                    {selectedNode.data.type === "ai_chat" && (
+                                        <>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">Model</label>
+                                                <select className="input mt-1">
+                                                    <option value="gpt-4-turbo-preview">GPT-4 Turbo</option>
+                                                    <option value="gpt-4o">GPT-4o</option>
+                                                    <option value="gpt-4o-mini">GPT-4o Mini</option>
+                                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">System Prompt</label>
+                                                <textarea
+                                                    placeholder="You are a helpful assistant..."
+                                                    className="input mt-1 min-h-[80px] resize-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">Temperature</label>
+                                                <input type="number" step="0.1" min="0" max="2" placeholder="0.7" className="input mt-1" />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {selectedNode.data.type === "ai_embedding" && (
+                                        <>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">Embedding Model</label>
+                                                <select className="input mt-1">
+                                                    <option value="text-embedding-3-small">text-embedding-3-small</option>
+                                                    <option value="text-embedding-3-large">text-embedding-3-large</option>
+                                                    <option value="text-embedding-ada-002">text-embedding-ada-002</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">Input Field</label>
+                                                <input type="text" placeholder="{{data.text}}" className="input mt-1" />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {selectedNode.data.type === "ai_rag" && (
+                                        <>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">Vector Store</label>
+                                                <select className="input mt-1">
+                                                    <option value="qdrant">Qdrant</option>
+                                                    <option value="pinecone">Pinecone</option>
+                                                    <option value="weaviate">Weaviate</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">Collection Name</label>
+                                                <input type="text" placeholder="knowledge_base" className="input mt-1" />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">Top K Results</label>
+                                                <input type="number" min="1" max="20" placeholder="5" className="input mt-1" />
+                                            </div>
+                                        </>
                                     )}
                                 </div>
                             </div>

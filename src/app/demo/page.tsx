@@ -15,7 +15,7 @@ export default function DemoPage() {
                             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
                                 <Workflow className="h-4 w-4 text-primary-foreground" />
                             </div>
-                            <span className="text-lg font-semibold">FlowForge</span>
+                            <span className="text-lg font-semibold">AgentForge</span>
                         </Link>
                         <div className="flex items-center gap-3">
                             <Link href="/auth/sign-in" className="btn-ghost text-sm">Sign in</Link>
@@ -35,7 +35,7 @@ export default function DemoPage() {
                         <div className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-sm text-muted-foreground mb-6">
                             <Play className="h-3 w-3" /> Interactive Demo
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-bold mb-4">See FlowForge in action</h1>
+                        <h1 className="text-4xl md:text-5xl font-bold mb-4">See AgentForge in action</h1>
                         <p className="text-lg text-muted-foreground max-w-xl mx-auto">
                             Watch how easy it is to build powerful automations with our visual workflow builder.
                         </p>
@@ -47,7 +47,7 @@ export default function DemoPage() {
                             <div className="h-3 w-3 rounded-full bg-red-500/80" />
                             <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
                             <div className="h-3 w-3 rounded-full bg-green-500/80" />
-                            <span className="ml-3 text-xs text-muted-foreground">workflow-demo.flowforge.io</span>
+                            <span className="ml-3 text-xs text-muted-foreground">workflow-demo.AgentForge.io</span>
                         </div>
                         <div className="relative h-[400px] md:h-[500px] bg-background/50 rounded-b-lg overflow-hidden">
                             <div className="absolute inset-0 bg-dots" />
@@ -156,7 +156,7 @@ export default function DemoPage() {
                             <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary">
                                 <Workflow className="h-3 w-3 text-primary-foreground" />
                             </div>
-                            <span className="text-sm font-medium">FlowForge</span>
+                            <span className="text-sm font-medium">AgentForge</span>
                         </div>
                         <p className="text-sm text-muted-foreground">
                             Built by <a href="https://linkedin.com/in/aditya-shenvi" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-foreground">Aditya Shenvi</a>

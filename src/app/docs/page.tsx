@@ -63,7 +63,7 @@ export default function DocsPage() {
                             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
                                 <Workflow className="h-4 w-4 text-primary-foreground" />
                             </div>
-                            <span className="text-lg font-semibold">FlowForge</span>
+                            <span className="text-lg font-semibold">AgentForge</span>
                             <span className="badge badge-secondary text-xs ml-2">Docs</span>
                         </Link>
                         <div className="flex items-center gap-3">
@@ -95,7 +95,7 @@ export default function DocsPage() {
                     </div>
                     <h1 className="text-4xl font-bold mb-4">Documentation</h1>
                     <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-                        Learn how to build powerful automation workflows with FlowForge.
+                        Learn how to build powerful automation workflows with AgentForge.
                     </p>
                 </motion.div>
 
@@ -160,7 +160,7 @@ export default function DocsPage() {
                             <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary">
                                 <Workflow className="h-3 w-3 text-primary-foreground" />
                             </div>
-                            <span className="text-sm font-medium">FlowForge</span>
+                            <span className="text-sm font-medium">AgentForge</span>
                         </div>
                         <p className="text-sm text-muted-foreground">
                             Built by <a href="https://linkedin.com/in/aditya-shenvi" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-foreground">Aditya Shenvi</a>

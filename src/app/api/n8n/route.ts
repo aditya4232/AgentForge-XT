@@ -13,7 +13,7 @@ export async function GET() {
         }
 
         const workflows = await n8nClient.getWorkflows();
-        const executions = await n8nClient.getExecutions(undefined, 10);
+        const executions = await n8nClient.getExecutions({ limit: 10 });
 
         return NextResponse.json({
             status: 'connected',

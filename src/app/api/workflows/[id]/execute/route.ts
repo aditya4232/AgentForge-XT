@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 // POST - Execute a workflow
 export async function POST(
@@ -7,6 +7,13 @@ export async function POST(
     { params }: { params: { id: string } }
 ) {
     try {
+        if (!isSupabaseConfigured || !supabase) {
+            return NextResponse.json(
+                { error: "Database not configured" },
+                { status: 503 }
+            );
+        }
+
         // Get workflow
         const { data: workflow, error: workflowError } = await supabase
             .from("workflows")
@@ -36,7 +43,7 @@ export async function POST(
 
         // Simulate workflow execution
         const nodes = workflow.nodes || [];
-        const logs: any[] = [];
+        const logs: { nodeId: string; nodeName: string; status: string; timestamp: string }[] = [];
 
         for (const node of nodes) {
             logs.push({
@@ -65,6 +72,7 @@ export async function POST(
             },
         });
     } catch (error) {
+        console.error("Error executing workflow:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

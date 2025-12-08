@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
 import { signOut } from "@/lib/firebase";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import {
     Workflow,
     Plus,
@@ -66,6 +66,13 @@ export default function DashboardPage() {
 
     const fetchWorkflows = async () => {
         try {
+            // Check if Supabase is configured
+            if (!isSupabaseConfigured || !supabase) {
+                console.log("Supabase not configured, using mock data");
+                setWorkflows([]);
+                return;
+            }
+
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('id')
@@ -128,8 +135,8 @@ export default function DashboardPage() {
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${item.active
-                                        ? "bg-secondary text-foreground font-medium"
-                                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                                    ? "bg-secondary text-foreground font-medium"
+                                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                                     }`}
                             >
                                 <item.icon className="h-4 w-4" />
@@ -240,8 +247,8 @@ export default function DashboardPage() {
                                         <div className="flex items-center gap-3 min-w-0">
                                             <div
                                                 className={`h-8 w-8 rounded-md flex items-center justify-center ${workflow.is_active
-                                                        ? "bg-green-500/10 text-green-600"
-                                                        : "bg-secondary text-muted-foreground"
+                                                    ? "bg-green-500/10 text-green-600"
+                                                    : "bg-secondary text-muted-foreground"
                                                     }`}
                                             >
                                                 <Workflow className="h-4 w-4" />

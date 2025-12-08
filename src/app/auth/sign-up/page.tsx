@@ -60,14 +60,14 @@ export default function SignUpPage() {
                         <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
                             <Workflow className="h-4 w-4 text-primary-foreground" />
                         </div>
-                        <span className="text-lg font-semibold">FlowForge</span>
+                        <span className="text-lg font-semibold">AgentForge</span>
                     </Link>
 
                     <h2 className="text-3xl font-bold mb-4">
                         Start automating in minutes
                     </h2>
                     <p className="text-muted-foreground mb-8">
-                        Join developers and teams who automate their workflows with FlowForge.
+                        Join developers and teams who automate their workflows with AgentForge.
                     </p>
 
                     <ul className="space-y-3">

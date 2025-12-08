@@ -115,7 +115,7 @@ export interface N8nCredential {
 class N8nClient {
     private baseUrl: string;
     private apiKey: string;
-    private headers: HeadersInit;
+    private headers!: HeadersInit;
 
     constructor(config?: N8nClientConfig) {
         this.baseUrl = config?.baseUrl || N8N_BASE_URL;

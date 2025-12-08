@@ -57,7 +57,7 @@ export default function SignInPage() {
                         <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary">
                             <Workflow className="h-5 w-5 text-primary-foreground" />
                         </div>
-                        <span className="text-xl font-semibold">FlowForge</span>
+                        <span className="text-xl font-semibold">AgentForge</span>
                     </Link>
                     <h1 className="text-2xl font-semibold mb-2">Welcome back</h1>
                     <p className="text-sm text-muted-foreground">

@@ -37,7 +37,7 @@ export default function NotFound() {
                     <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary">
                         <Workflow className="h-3 w-3 text-primary-foreground" />
                     </div>
-                    FlowForge
+                    AgentForge
                 </Link>
             </div>
         </div>

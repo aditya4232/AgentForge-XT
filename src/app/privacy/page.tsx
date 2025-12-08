@@ -10,7 +10,7 @@ export default function PrivacyPage() {
                         <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
                             <Workflow className="h-4 w-4 text-primary-foreground" />
                         </div>
-                        <span className="text-lg font-semibold">FlowForge</span>
+                        <span className="text-lg font-semibold">AgentForge</span>
                     </Link>
                 </div>
             </nav>
@@ -81,7 +81,7 @@ export default function PrivacyPage() {
 
                     <section>
                         <h2 className="text-xl font-semibold mb-3">8. Contact Us</h2>
-                        <p className="text-muted-foreground">If you have any questions about this Privacy Policy, please contact us at privacy@flowforge.io</p>
+                        <p className="text-muted-foreground">If you have any questions about this Privacy Policy, please contact us at privacy@AgentForge.io</p>
                     </section>
                 </div>
             </main>

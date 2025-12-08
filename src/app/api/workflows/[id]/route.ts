@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 // GET - Get a specific workflow
 export async function GET(
@@ -7,6 +7,13 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
+        if (!isSupabaseConfigured || !supabase) {
+            return NextResponse.json(
+                { error: "Database not configured" },
+                { status: 503 }
+            );
+        }
+
         const { data: workflow, error } = await supabase
             .from("workflows")
             .select("*")
@@ -19,6 +26,7 @@ export async function GET(
 
         return NextResponse.json({ workflow });
     } catch (error) {
+        console.error("Error fetching workflow:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
@@ -29,6 +37,13 @@ export async function PUT(
     { params }: { params: { id: string } }
 ) {
     try {
+        if (!isSupabaseConfigured || !supabase) {
+            return NextResponse.json(
+                { error: "Database not configured" },
+                { status: 503 }
+            );
+        }
+
         const body = await request.json();
         const { name, description, nodes, edges, is_active } = body;
 
@@ -52,6 +67,7 @@ export async function PUT(
 
         return NextResponse.json({ workflow });
     } catch (error) {
+        console.error("Error updating workflow:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
@@ -62,6 +78,13 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
+        if (!isSupabaseConfigured || !supabase) {
+            return NextResponse.json(
+                { error: "Database not configured" },
+                { status: 503 }
+            );
+        }
+
         const { error } = await supabase
             .from("workflows")
             .delete()
@@ -73,6 +96,7 @@ export async function DELETE(
 
         return NextResponse.json({ message: "Workflow deleted" });
     } catch (error) {
+        console.error("Error deleting workflow:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

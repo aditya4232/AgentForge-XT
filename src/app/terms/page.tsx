@@ -10,7 +10,7 @@ export default function TermsPage() {
                         <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
                             <Workflow className="h-4 w-4 text-primary-foreground" />
                         </div>
-                        <span className="text-lg font-semibold">FlowForge</span>
+                        <span className="text-lg font-semibold">AgentForge</span>
                     </Link>
                 </div>
             </nav>
@@ -26,12 +26,12 @@ export default function TermsPage() {
                 <div className="prose prose-neutral dark:prose-invert max-w-none space-y-6">
                     <section>
                         <h2 className="text-xl font-semibold mb-3">1. Acceptance of Terms</h2>
-                        <p className="text-muted-foreground">By accessing and using FlowForge ("Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.</p>
+                        <p className="text-muted-foreground">By accessing and using AgentForge ("Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.</p>
                     </section>
 
                     <section>
                         <h2 className="text-xl font-semibold mb-3">2. Description of Service</h2>
-                        <p className="text-muted-foreground">FlowForge is a workflow automation platform that allows users to create, manage, and execute automated workflows. The Service includes a visual workflow builder, execution engine, and related tools.</p>
+                        <p className="text-muted-foreground">AgentForge is a workflow automation platform that allows users to create, manage, and execute automated workflows. The Service includes a visual workflow builder, execution engine, and related tools.</p>
                     </section>
 
                     <section>
@@ -53,12 +53,12 @@ export default function TermsPage() {
 
                     <section>
                         <h2 className="text-xl font-semibold mb-3">5. Intellectual Property</h2>
-                        <p className="text-muted-foreground">The Service and its original content, features, and functionality are owned by FlowForge and are protected by international copyright, trademark, and other intellectual property laws.</p>
+                        <p className="text-muted-foreground">The Service and its original content, features, and functionality are owned by AgentForge and are protected by international copyright, trademark, and other intellectual property laws.</p>
                     </section>
 
                     <section>
                         <h2 className="text-xl font-semibold mb-3">6. Limitation of Liability</h2>
-                        <p className="text-muted-foreground">In no event shall FlowForge be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the Service.</p>
+                        <p className="text-muted-foreground">In no event shall AgentForge be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the Service.</p>
                     </section>
 
                     <section>
@@ -68,7 +68,7 @@ export default function TermsPage() {
 
                     <section>
                         <h2 className="text-xl font-semibold mb-3">8. Contact</h2>
-                        <p className="text-muted-foreground">If you have any questions about these Terms, please contact us at support@flowforge.io</p>
+                        <p className="text-muted-foreground">If you have any questions about these Terms, please contact us at support@AgentForge.io</p>
                     </section>
                 </div>
             </main>
