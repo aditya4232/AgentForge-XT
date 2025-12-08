@@ -15,6 +15,8 @@ import ReactFlow, {
     Connection,
     BackgroundVariant,
     Panel,
+    Handle,
+    Position,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { motion, AnimatePresence } from "framer-motion";
@@ -93,40 +95,72 @@ function getNodeInfo(type: string) {
     return null;
 }
 
-// Custom node component
+// Custom node component with visible handles
 function CustomNode({ data, selected }: { data: any; selected: boolean }) {
     const nodeInfo = getNodeInfo(data.type);
     const Icon = nodeInfo?.icon || Zap;
 
     return (
         <div
-            className={`min-w-[160px] rounded-lg border bg-card shadow-sm transition-all ${selected ? "border-primary shadow-md" : "border-border"
+            className={`relative min-w-[180px] rounded-xl border-2 bg-card shadow-lg transition-all ${selected
+                    ? "border-violet-500 shadow-violet-500/25"
+                    : "border-border hover:border-violet-500/50"
                 }`}
         >
+            {/* Left Handle (Input) */}
+            <Handle
+                type="target"
+                position={Position.Left}
+                style={{
+                    width: 14,
+                    height: 14,
+                    left: -8,
+                    background: '#8b5cf6',
+                    border: '3px solid #1e1e2e',
+                    cursor: 'crosshair',
+                }}
+            />
+
             <div className="p-3">
-                <div className="flex items-center gap-2">
-                    <div className={`h-7 w-7 rounded-md flex items-center justify-center ${nodeInfo?.color || "bg-secondary"}`}>
-                        <Icon className="h-3.5 w-3.5" />
+                <div className="flex items-center gap-3">
+                    <div className={`h-9 w-9 rounded-lg flex items-center justify-center shadow-md ${nodeInfo?.color || "bg-violet-500/10 text-violet-500"}`}>
+                        <Icon className="h-4 w-4" />
                     </div>
-                    <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{data.label}</p>
+                    <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold truncate">{data.label}</p>
+                        <p className="text-xs text-muted-foreground">{nodeInfo?.label || data.type}</p>
                     </div>
                 </div>
             </div>
+
             {data.status && (
                 <div
-                    className={`px-3 py-1.5 border-t text-xs flex items-center gap-1.5 ${data.status === "success"
-                        ? "border-green-200 bg-green-50 text-green-600 dark:border-green-900 dark:bg-green-950"
-                        : data.status === "error"
-                            ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900 dark:bg-red-950"
-                            : "border-border"
+                    className={`px-3 py-2 border-t text-xs flex items-center gap-2 ${data.status === "success"
+                            ? "border-green-500/30 bg-green-500/10 text-green-500"
+                            : data.status === "error"
+                                ? "border-red-500/30 bg-red-500/10 text-red-500"
+                                : "border-border"
                         }`}
                 >
-                    {data.status === "success" && <CheckCircle className="h-3 w-3" />}
-                    {data.status === "error" && <AlertCircle className="h-3 w-3" />}
+                    {data.status === "success" && <CheckCircle className="h-3.5 w-3.5" />}
+                    {data.status === "error" && <AlertCircle className="h-3.5 w-3.5" />}
                     {data.status === "success" ? "Success" : data.status === "error" ? "Failed" : "Pending"}
                 </div>
             )}
+
+            {/* Right Handle (Output) */}
+            <Handle
+                type="source"
+                position={Position.Right}
+                style={{
+                    width: 14,
+                    height: 14,
+                    right: -8,
+                    background: '#8b5cf6',
+                    border: '3px solid #1e1e2e',
+                    cursor: 'crosshair',
+                }}
+            />
         </div>
     );
 }
