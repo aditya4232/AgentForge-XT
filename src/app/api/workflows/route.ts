@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { n8nClient } from "@/lib/n8n-client";
 
 // GET - List all workflows for the authenticated user
 export async function GET(request: NextRequest) {
@@ -99,7 +100,27 @@ export async function POST(request: NextRequest) {
             profile = newProfile;
         }
 
-        // Create workflow
+        // Create workflow in n8n
+        let n8nWorkflowId = null;
+        try {
+            if (await n8nClient.isConfigured()) {
+                const n8nWorkflowData = n8nClient.convertToN8nWorkflow({
+                    name,
+                    nodes,
+                    edges,
+                    is_active: false
+                });
+                const n8nWorkflow = await n8nClient.createWorkflow(n8nWorkflowData);
+                if (n8nWorkflow) {
+                    n8nWorkflowId = n8nWorkflow.id;
+                }
+            }
+        } catch (n8nError) {
+            console.error("Failed to create n8n workflow:", n8nError);
+            // Continue even if n8n sync fails, we can sync later
+        }
+
+        // Create workflow in Supabase
         const { data: workflow, error } = await supabase
             .from("workflows")
             .insert({
@@ -109,6 +130,7 @@ export async function POST(request: NextRequest) {
                 nodes,
                 edges,
                 is_active: false,
+                n8n_id: n8nWorkflowId,
             })
             .select()
             .single();

@@ -3,6 +3,7 @@
 import { useCallback, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/components/auth-provider";
 import ReactFlow, {
     Node,
     Edge,
@@ -32,6 +33,7 @@ import {
     Zap,
     Loader2,
     Sparkles,
+    Globe,
 } from "lucide-react";
 import { WorkflowHelp } from "@/components/workflow/WorkflowHelp";
 import CustomNode from "@/components/workflow/CustomNode";
@@ -42,7 +44,7 @@ import { nodeCategories } from "@/lib/workflow-constants";
 const nodeTypes = { custom: CustomNode };
 
 // Templates for quick start - Enhanced with AI workflows
-const templates = [
+const templates: any[] = [
     {
         id: "blank",
         name: "Blank Workflow",
@@ -140,10 +142,45 @@ const templates = [
             { id: "e3-5", source: "3", target: "5" },
         ],
     },
+    {
+        id: "web-scraper-ai",
+        name: "Web Scraper to AI",
+        description: "Scrape a website and analyze content with AI",
+        icon: Globe as any,
+        category: "Automation",
+        nodes: [
+            { id: "1", type: "custom", position: { x: 100, y: 150 }, data: { label: "Manual Trigger", type: "manual" } },
+            { id: "2", type: "custom", position: { x: 350, y: 150 }, data: { label: "Scrape Site", type: "web_scraper", config: { url: "https://example.com", selector: "h1" } } },
+            { id: "3", type: "custom", position: { x: 600, y: 150 }, data: { label: "Analyze", type: "ai_chat", config: { systemPrompt: "Summarize this content." } } },
+        ],
+        edges: [
+            { id: "e1-2", source: "1", target: "2" },
+            { id: "e2-3", source: "2", target: "3" },
+        ],
+    },
+    {
+        id: "kb-builder",
+        name: "Knowledge Base Builder",
+        description: "Scrape content, vectorize it, and store in Qdrant",
+        icon: Globe as any, // Cast to avoid type error
+        category: "Automation",
+        nodes: [
+            { id: "1", type: "custom", position: { x: 100, y: 150 }, data: { label: "Manual Trigger", type: "manual" } },
+            { id: "2", type: "custom", position: { x: 350, y: 150 }, data: { label: "Scrape Site", type: "web_scraper", config: { url: "https://example.com", selector: "p" } } },
+            { id: "3", type: "custom", position: { x: 600, y: 150 }, data: { label: "Embed Content", type: "ai_embedding" } },
+            { id: "4", type: "custom", position: { x: 850, y: 150 }, data: { label: "Save to Qdrant", type: "qdrant", config: { action: "upsert", collection: "knowledge_base" } } },
+        ],
+        edges: [
+            { id: "e1-2", source: "1", target: "2" },
+            { id: "e2-3", source: "2", target: "3" },
+            { id: "e3-4", source: "3", target: "4" },
+        ],
+    },
 ];
 
 
 export default function NewWorkflowPage() {
+    const { user } = useAuth();
     const router = useRouter();
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
@@ -211,11 +248,34 @@ export default function NewWorkflowPage() {
     };
 
     const handleSave = async () => {
+        if (!user) return;
         setIsSaving(true);
-        await new Promise((r) => setTimeout(r, 800));
-        // In production, save to Supabase
-        setIsSaving(false);
-        router.push("/dashboard");
+
+        try {
+            const response = await fetch("/api/workflows", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-user-id": user.uid,
+                },
+                body: JSON.stringify({
+                    name: workflowName,
+                    description: "Created via Workflow Builder",
+                    nodes,
+                    edges,
+                }),
+            });
+
+            if (response.ok) {
+                router.push("/dashboard");
+            } else {
+                console.error("Failed to save workflow");
+            }
+        } catch (error) {
+            console.error("Error saving workflow:", error);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleExecute = async () => {

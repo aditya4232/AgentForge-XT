@@ -49,6 +49,7 @@ export const nodeCategories: NodeCategory[] = [
             { type: "slack", label: "Slack", icon: Send, color: "bg-blue-500/10 text-blue-600" },
             { type: "email", label: "Send Email", icon: Mail, color: "bg-blue-500/10 text-blue-600" },
             { type: "http_request", label: "HTTP Request", icon: Send, color: "bg-blue-500/10 text-blue-600" },
+            { type: "web_scraper", label: "Web Scraper", icon: Globe, color: "bg-blue-500/10 text-blue-600" },
         ],
     },
     {

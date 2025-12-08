@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import ReactFlow, {
@@ -34,33 +34,13 @@ import CustomNode from "@/components/workflow/CustomNode";
 
 const nodeTypes = { custom: CustomNode };
 
-const initialNodes: Node[] = [
-    {
-        id: "1",
-        type: "custom",
-        position: { x: 100, y: 150 },
-        data: { label: "On Chat Message", type: "chat_trigger" },
-    },
-    {
-        id: "2",
-        type: "custom",
-        position: { x: 400, y: 150 },
-        data: { label: "AI Agent", type: "ai_agent" },
-    },
-    {
-        id: "3",
-        type: "custom",
-        position: { x: 700, y: 150 },
-        data: { label: "Slack", type: "slack" },
-    },
-];
+const initialNodes: Node[] = [];
+const initialEdges: Edge[] = [];
 
-const initialEdges: Edge[] = [
-    { id: "e1-2", source: "1", target: "2" },
-    { id: "e2-3", source: "2", target: "3" },
-];
+import { useAuth } from "@/components/auth-provider";
 
 export default function WorkflowEditorPage() {
+    const { user } = useAuth();
     const params = useParams();
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
@@ -68,12 +48,33 @@ export default function WorkflowEditorPage() {
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
     const [showNodePanel, setShowNodePanel] = useState(false);
-    const [workflowName, setWorkflowName] = useState("AI Agent Workflow");
+    const [workflowName, setWorkflowName] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [isExecuting, setIsExecuting] = useState(false);
     const [activeTab, setActiveTab] = useState("editor");
     const [isWorkflowActive, setIsWorkflowActive] = useState(false);
     const [showLogs, setShowLogs] = useState(false);
+    const [executionLogs, setExecutionLogs] = useState<any[]>([]);
+
+    // Fetch workflow data
+    useEffect(() => {
+        const fetchWorkflow = async () => {
+            if (!user) return;
+            try {
+                const response = await fetch(`/api/workflows/${params.id}`);
+                if (response.ok) {
+                    const { workflow } = await response.json();
+                    setWorkflowName(workflow.name || "Untitled Workflow");
+                    setNodes(workflow.nodes || []);
+                    setEdges(workflow.edges || []);
+                    setIsWorkflowActive(workflow.is_active || false);
+                }
+            } catch (error) {
+                console.error("Error fetching workflow:", error);
+            }
+        };
+        fetchWorkflow();
+    }, [params.id, user, setNodes, setEdges]);
 
     const onConnect = useCallback(
         (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -119,20 +120,29 @@ export default function WorkflowEditorPage() {
     );
 
     const handleSave = async () => {
+        if (!user) return;
         setIsSaving(true);
         try {
-            // For now, just log the workflow data
-            // In production with Supabase configured, save to database
             const workflowData = {
                 name: workflowName,
                 nodes: nodes,
                 edges: edges,
                 is_active: isWorkflowActive,
-                updated_at: new Date().toISOString(),
             };
 
-            console.log("Saved workflow:", workflowData);
-            await new Promise((r) => setTimeout(r, 800));
+            const response = await fetch(`/api/workflows/${params.id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-user-id": user.uid,
+                },
+                body: JSON.stringify(workflowData),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to save workflow");
+            }
+            console.log("Saved workflow successfully");
         } catch (error) {
             console.error("Error saving workflow:", error);
         } finally {
@@ -141,22 +151,40 @@ export default function WorkflowEditorPage() {
     };
 
     const handleExecute = async () => {
+        if (!user) return;
         setIsExecuting(true);
         setShowLogs(true);
-        for (const node of nodes) {
-            setNodes((nds) =>
-                nds.map((n) =>
-                    n.id === node.id ? { ...n, data: { ...n.data, status: "running" } } : n
-                )
-            );
-            await new Promise((r) => setTimeout(r, 600));
-            setNodes((nds) =>
-                nds.map((n) =>
-                    n.id === node.id ? { ...n, data: { ...n.data, status: "success" } } : n
-                )
-            );
+        setExecutionLogs([]); // Clear previous logs
+
+        try {
+            const response = await fetch(`/api/workflows/${params.id}/execute`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-user-id": user.uid,
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.execution) {
+                // Update visuals for execution (simplified)
+                setExecutionLogs(data.execution.logs || []);
+                if (data.execution.status === "success") {
+                    console.log("Execution successful");
+                }
+            }
+        } catch (error) {
+            console.error("Error executing workflow:", error);
+            setExecutionLogs([{
+                timestamp: new Date().toISOString(),
+                status: "error",
+                nodeName: "System",
+                message: "Execution failed to start"
+            }]);
+        } finally {
+            setIsExecuting(false);
         }
-        setIsExecuting(false);
     };
 
     const handleDeleteNode = () => {
@@ -350,13 +378,19 @@ export default function WorkflowEditorPage() {
                                 </button>
                             </div>
                             <div className="h-48 overflow-y-auto bg-black/90 text-mono text-xs p-4 font-mono text-green-400">
-                                <div className="space-y-1">
-                                    <p>[info] Workflow initialized</p>
-                                    <p>[info] Loading nodes...</p>
-                                    <p>[success] Nodes connected successfully</p>
-                                    <p className="text-blue-400">[debug] Executing workflow...</p>
-                                    <p className="text-green-500">[success] Workflow completed</p>
-                                </div>
+                                {executionLogs.length === 0 ? (
+                                    <div className="space-y-1">
+                                        <p className="text-muted-foreground">[info] Waiting for execution...</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-1">
+                                        {executionLogs.map((log, i) => (
+                                            <p key={i} className={log.status === "error" ? "text-red-400" : log.status === "running" ? "text-blue-400" : "text-green-400"}>
+                                                [{log.status}] {log.nodeName || "System"}: {log.message || "Completed"}
+                                            </p>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     )}
@@ -385,7 +419,7 @@ export default function WorkflowEditorPage() {
                                     </button>
                                 </div>
                             </div>
-                            <div className="p-4 overflow-y-auto flex-1">
+                            <div className="p-4 overflow-y-auto flex-1 h-[calc(100vh-140px)]">
                                 <div className="space-y-4">
                                     <div>
                                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Node Label</label>
@@ -404,9 +438,167 @@ export default function WorkflowEditorPage() {
                                             className="input mt-1.5 w-full"
                                         />
                                     </div>
-                                    <div className="p-3 rounded-lg bg-secondary/50 border border-border text-sm text-muted-foreground">
-                                        Configuration for <strong>{selectedNode.data.type}</strong> will appear here.
+
+                                    <div>
+                                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Type</label>
+                                        <div className="mt-1 px-3 py-2 rounded-md border border-border bg-secondary/50 text-sm">
+                                            {selectedNode.data.type}
+                                        </div>
                                     </div>
+
+                                    {selectedNode.data.type === "http_request" && (
+                                        <>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">URL</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="https://api.example.com"
+                                                    className="input mt-1 w-full"
+                                                    value={selectedNode.data.config?.url || ""}
+                                                    onChange={(e) => {
+                                                        setNodes((nds) => nds.map((n) => n.id === selectedNode.id ? { ...n, data: { ...n.data, config: { ...n.data.config, url: e.target.value } } } : n));
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">Method</label>
+                                                <select
+                                                    className="input mt-1 w-full"
+                                                    value={selectedNode.data.config?.method || "GET"}
+                                                    onChange={(e) => {
+                                                        setNodes((nds) => nds.map((n) => n.id === selectedNode.id ? { ...n, data: { ...n.data, config: { ...n.data.config, method: e.target.value } } } : n));
+                                                    }}
+                                                >
+                                                    <option>GET</option>
+                                                    <option>POST</option>
+                                                    <option>PUT</option>
+                                                    <option>DELETE</option>
+                                                </select>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {selectedNode.data.type === "ai_chat" && (
+                                        <>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">Model</label>
+                                                <select
+                                                    className="input mt-1 w-full"
+                                                    value={selectedNode.data.config?.model || "gpt-4-turbo-preview"}
+                                                    onChange={(e) => {
+                                                        setNodes((nds) => nds.map((n) => n.id === selectedNode.id ? { ...n, data: { ...n.data, config: { ...n.data.config, model: e.target.value } } } : n));
+                                                    }}
+                                                >
+                                                    <option value="gpt-4-turbo-preview">GPT-4 Turbo</option>
+                                                    <option value="gpt-4o">GPT-4o</option>
+                                                    <option value="gpt-4o-mini">GPT-4o Mini</option>
+                                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">System Prompt</label>
+                                                <textarea
+                                                    placeholder="You are a helpful assistant..."
+                                                    className="input mt-1 min-h-[120px] resize-none w-full"
+                                                    value={selectedNode.data.config?.systemPrompt || ""}
+                                                    onChange={(e) => {
+                                                        setNodes((nds) => nds.map((n) => n.id === selectedNode.id ? { ...n, data: { ...n.data, config: { ...n.data.config, systemPrompt: e.target.value } } } : n));
+                                                    }}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {selectedNode.data.type === "webhook" && (
+                                        <div>
+                                            <label className="text-xs font-medium text-muted-foreground">Webhook URL</label>
+                                            <div className="mt-1 px-3 py-2 rounded-md border border-border bg-secondary/50 text-xs font-mono break-all select-all">
+                                                {`${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhook/${selectedNode.id}`}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {selectedNode.data.type === "web_scraper" && (
+                                        <>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">URL</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="https://example.com"
+                                                    className="input mt-1 w-full"
+                                                    value={selectedNode.data.config?.url || ""}
+                                                    onChange={(e) => {
+                                                        setNodes((nds) => nds.map((n) => n.id === selectedNode.id ? { ...n, data: { ...n.data, config: { ...n.data.config, url: e.target.value } } } : n));
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">CSS Selector</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="body, .content, #main"
+                                                    className="input mt-1 w-full"
+                                                    value={selectedNode.data.config?.selector || ""}
+                                                    onChange={(e) => {
+                                                        setNodes((nds) => nds.map((n) => n.id === selectedNode.id ? { ...n, data: { ...n.data, config: { ...n.data.config, selector: e.target.value } } } : n));
+                                                    }}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {selectedNode.data.type === "qdrant" && (
+                                        <>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">Collection Name</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="knowledge_base"
+                                                    className="input mt-1 w-full"
+                                                    value={selectedNode.data.config?.collection || ""}
+                                                    onChange={(e) => {
+                                                        setNodes((nds) => nds.map((n) => n.id === selectedNode.id ? { ...n, data: { ...n.data, config: { ...n.data.config, collection: e.target.value } } } : n));
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-medium text-muted-foreground">Action</label>
+                                                <select
+                                                    className="input mt-1 w-full"
+                                                    value={selectedNode.data.config?.action || "upsert"}
+                                                    onChange={(e) => {
+                                                        setNodes((nds) => nds.map((n) => n.id === selectedNode.id ? { ...n, data: { ...n.data, config: { ...n.data.config, action: e.target.value } } } : n));
+                                                    }}
+                                                >
+                                                    <option value="upsert">Upsert (Save)</option>
+                                                    <option value="search">Search (Retrieve)</option>
+                                                </select>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {/* Default message if no specific config */}
+                                    {!["http_request", "ai_chat", "webhook", "web_scraper", "qdrant"].includes(selectedNode.data.type) && (
+                                        <div className="p-3 rounded-lg bg-secondary/50 border border-border text-sm text-muted-foreground">
+                                            Configuration options for <strong>{selectedNode.data.type}</strong> are generic.
+                                            <div className="mt-2">
+                                                <label className="text-xs font-medium text-muted-foreground">Config JSON</label>
+                                                <textarea
+                                                    className="input mt-1 w-full font-mono text-xs"
+                                                    rows={5}
+                                                    value={JSON.stringify(selectedNode.data.config || {}, null, 2)}
+                                                    onChange={(e) => {
+                                                        try {
+                                                            const config = JSON.parse(e.target.value);
+                                                            setNodes((nds) => nds.map((n) => n.id === selectedNode.id ? { ...n, data: { ...n.data, config } } : n));
+                                                        } catch (err) {
+                                                            // Ignore invalid JSON while typing
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>
