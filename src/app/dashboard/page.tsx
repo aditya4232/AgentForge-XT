@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
@@ -21,17 +21,6 @@ import {
     ChevronRight,
 } from "lucide-react";
 
-// Mock data
-// Mock data removed
-
-
-const stats = [
-    { label: "Total Workflows", value: "3", icon: Workflow },
-    { label: "Active", value: "2", icon: Zap },
-    { label: "Executions", value: "275", icon: Play },
-    { label: "Success Rate", value: "98%", icon: BarChart3 },
-];
-
 const navItems = [
     { href: "/dashboard", label: "Workflows", icon: Workflow, active: true },
     { href: "/dashboard/executions", label: "Executions", icon: Clock },
@@ -44,6 +33,25 @@ export default function DashboardPage() {
     const router = useRouter();
     const [workflows, setWorkflows] = useState<any[]>([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
+
+    // Calculate real stats from workflows
+    const stats = useMemo(() => {
+        const totalWorkflows = workflows.length;
+        const activeWorkflows = workflows.filter(w => w.is_active).length;
+
+        return [
+            { label: "Total Workflows", value: totalWorkflows.toString(), icon: Workflow },
+            { label: "Active", value: activeWorkflows.toString(), icon: Zap },
+            { label: "Inactive", value: (totalWorkflows - activeWorkflows).toString(), icon: Clock },
+            {
+                label: "This Month", value: workflows.filter(w => {
+                    const created = new Date(w.created_at);
+                    const now = new Date();
+                    return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+                }).length.toString(), icon: BarChart3
+            },
+        ];
+    }, [workflows]);
 
     useEffect(() => {
         if (!loading && !user) {
@@ -58,7 +66,6 @@ export default function DashboardPage() {
 
     const fetchWorkflows = async () => {
         try {
-            // Get profile ID first (assuming profile exists linked to user email)
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('id')
@@ -87,7 +94,7 @@ export default function DashboardPage() {
         router.push("/");
     };
 
-    if (loading) {
+    if (loading || isLoadingData) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -110,7 +117,7 @@ export default function DashboardPage() {
                             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
                                 <Workflow className="h-4 w-4 text-primary-foreground" />
                             </div>
-                            <span className="font-semibold">FlowForge</span>
+                            <span className="font-semibold">AgentForge</span>
                         </Link>
                     </div>
 
@@ -121,8 +128,8 @@ export default function DashboardPage() {
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${item.active
-                                    ? "bg-secondary text-foreground font-medium"
-                                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                                        ? "bg-secondary text-foreground font-medium"
+                                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                                     }`}
                             >
                                 <item.icon className="h-4 w-4" />
@@ -192,7 +199,7 @@ export default function DashboardPage() {
                 </header>
 
                 <div className="p-6 space-y-6">
-                    {/* Stats */}
+                    {/* Stats - Real Data */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         {stats.map((stat) => (
                             <div key={stat.label} className="rounded-lg border border-border p-4">
@@ -205,71 +212,67 @@ export default function DashboardPage() {
                         ))}
                     </div>
 
-                    {/* Workflows */}
+                    {/* Workflows - Real Data */}
                     <div className="rounded-lg border border-border">
                         <div className="px-4 py-3 border-b border-border">
                             <h2 className="text-sm font-medium">Your Workflows</h2>
                         </div>
                         <div className="divide-y divide-border">
-                            {workflows.map((workflow) => (
-                                <Link
-                                    key={workflow.id}
-                                    href={`/workflow/${workflow.id}`}
-                                    className="flex items-center justify-between px-4 py-3 hover:bg-secondary/50 transition-colors group"
-                                >
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <div
-                                            className={`h-8 w-8 rounded-md flex items-center justify-center ${workflow.is_active
-                                                ? "bg-green-500/10 text-green-600"
-                                                : "bg-secondary text-muted-foreground"
-                                                }`}
-                                        >
-                                            <Workflow className="h-4 w-4" />
+                            {workflows.length === 0 ? (
+                                <div className="px-4 py-12 text-center">
+                                    <Workflow className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                                    <h3 className="text-sm font-medium mb-1">No workflows yet</h3>
+                                    <p className="text-xs text-muted-foreground mb-4">
+                                        Create your first workflow to get started
+                                    </p>
+                                    <Link href="/workflow/new" className="btn-primary inline-flex">
+                                        <Plus className="h-4 w-4" />
+                                        Create Workflow
+                                    </Link>
+                                </div>
+                            ) : (
+                                workflows.map((workflow) => (
+                                    <Link
+                                        key={workflow.id}
+                                        href={`/workflow/${workflow.id}`}
+                                        className="flex items-center justify-between px-4 py-3 hover:bg-secondary/50 transition-colors group"
+                                    >
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div
+                                                className={`h-8 w-8 rounded-md flex items-center justify-center ${workflow.is_active
+                                                        ? "bg-green-500/10 text-green-600"
+                                                        : "bg-secondary text-muted-foreground"
+                                                    }`}
+                                            >
+                                                <Workflow className="h-4 w-4" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                                                    {workflow.name}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground truncate">
+                                                    {workflow.description || "No description"}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
-                                                {workflow.name}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground truncate">
-                                                {workflow.description}
-                                            </p>
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-2">
+                                                {workflow.is_active && (
+                                                    <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 text-xs font-medium">
+                                                        Active
+                                                    </span>
+                                                )}
+                                                <span className="text-xs text-muted-foreground">
+                                                    {new Date(workflow.updated_at).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="text-right hidden sm:block">
-                                            <p className="text-xs text-muted-foreground">
-                                                {workflow.executions} runs
-                                            </p>
-                                        </div>
-                                        <span
-                                            className={`badge ${workflow.is_active ? "badge-success" : "badge-secondary"
-                                                }`}
-                                        >
-                                            {workflow.is_active ? "Active" : "Inactive"}
-                                        </span>
-                                        <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </div>
-                                </Link>
-                            ))}
+                                    </Link>
+                                ))
+                            )}
                         </div>
                     </div>
-
-                    {/* Empty state */}
-                    {workflows.length === 0 && (
-                        <div className="rounded-lg border border-dashed border-border p-12 text-center">
-                            <div className="h-10 w-10 rounded-md bg-secondary flex items-center justify-center mx-auto mb-4">
-                                <Workflow className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                            <h3 className="font-medium mb-2">No workflows yet</h3>
-                            <p className="text-sm text-muted-foreground mb-4">
-                                Create your first workflow to start automating
-                            </p>
-                            <Link href="/workflow/new" className="btn-primary">
-                                <Plus className="h-4 w-4" />
-                                Create workflow
-                            </Link>
-                        </div>
-                    )}
                 </div>
             </main>
         </div>

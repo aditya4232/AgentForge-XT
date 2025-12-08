@@ -5,19 +5,19 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
 import { signOut } from "@/lib/firebase";
-import { motion } from "framer-motion";
 import {
-    Workflow, Settings, LogOut, BarChart3, Clock, CheckCircle, XCircle,
-    Loader2, Play, RefreshCw, Filter, Calendar, ChevronRight, AlertCircle,
+    Workflow,
+    Settings,
+    LogOut,
+    BarChart3,
+    Clock,
+    CheckCircle,
+    XCircle,
+    PlayCircle,
+    Loader2,
+    RefreshCw,
+    ChevronRight,
 } from "lucide-react";
-
-const mockExecutions = [
-    { id: "exec-1", workflow_name: "Slack Notification", status: "success", started_at: "2024-12-07T10:30:00Z", duration: "2s", nodes_executed: 3 },
-    { id: "exec-2", workflow_name: "Daily Report Generator", status: "success", started_at: "2024-12-07T09:00:00Z", duration: "15s", nodes_executed: 5 },
-    { id: "exec-3", workflow_name: "GitHub Issue to Notion", status: "failed", started_at: "2024-12-07T08:45:00Z", duration: "3s", nodes_executed: 2, error: "HTTP 401: Unauthorized" },
-    { id: "exec-4", workflow_name: "Slack Notification", status: "success", started_at: "2024-12-07T08:15:00Z", duration: "1s", nodes_executed: 3 },
-    { id: "exec-5", workflow_name: "Daily Report Generator", status: "running", started_at: "2024-12-07T12:00:00Z", duration: "-", nodes_executed: 2 },
-];
 
 const navItems = [
     { href: "/dashboard", label: "Workflows", icon: Workflow },
@@ -26,98 +26,297 @@ const navItems = [
     { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
-const statusConfig: Record<string, { icon: any; color: string; bg: string; label: string }> = {
-    success: { icon: CheckCircle, color: "text-green-500", bg: "bg-green-500/10", label: "Success" },
-    failed: { icon: XCircle, color: "text-red-500", bg: "bg-red-500/10", label: "Failed" },
-    running: { icon: Loader2, color: "text-blue-500", bg: "bg-blue-500/10", label: "Running" },
-};
+// Mock execution data - in production, fetch from n8n or database
+const mockExecutions = [
+    {
+        id: "exec-1",
+        workflowId: "wf-1",
+        workflowName: "Daily Email Report",
+        status: "success" as const,
+        startedAt: new Date(Date.now() - 3600000).toISOString(),
+        completedAt: new Date(Date.now() - 3598000).toISOString(),
+        duration: "2s",
+    },
+    {
+        id: "exec-2",
+        workflowId: "wf-2",
+        workflowName: "Slack Notification",
+        status: "success" as const,
+        startedAt: new Date(Date.now() - 7200000).toISOString(),
+        completedAt: new Date(Date.now() - 7199500).toISOString(),
+        duration: "0.5s",
+    },
+    {
+        id: "exec-3",
+        workflowId: "wf-3",
+        workflowName: "Data Sync Pipeline",
+        status: "failed" as const,
+        startedAt: new Date(Date.now() - 10800000).toISOString(),
+        completedAt: new Date(Date.now() - 10795000).toISOString(),
+        duration: "5s",
+        error: "Connection timeout",
+    },
+    {
+        id: "exec-4",
+        workflowId: "wf-1",
+        workflowName: "Daily Email Report",
+        status: "running" as const,
+        startedAt: new Date(Date.now() - 30000).toISOString(),
+    },
+];
+
+interface Execution {
+    id: string;
+    workflowId: string;
+    workflowName: string;
+    status: "pending" | "running" | "success" | "failed";
+    startedAt: string;
+    completedAt?: string;
+    duration?: string;
+    error?: string;
+}
 
 export default function ExecutionsPage() {
     const { user, loading } = useAuth();
     const router = useRouter();
-    const [filter, setFilter] = useState<string>("all");
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [executions, setExecutions] = useState<Execution[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [filter, setFilter] = useState<"all" | "success" | "failed" | "running">("all");
 
-    useEffect(() => { if (!loading && !user) router.push("/auth/sign-in"); }, [user, loading, router]);
+    useEffect(() => {
+        if (!loading && !user) {
+            router.push("/auth/sign-in");
+            return;
+        }
 
-    const handleSignOut = async () => { await signOut(); router.push("/"); };
-    const handleRefresh = async () => { setIsRefreshing(true); await new Promise(r => setTimeout(r, 1000)); setIsRefreshing(false); };
-    const filteredExecutions = mockExecutions.filter(e => filter === "all" || e.status === filter);
+        if (user) {
+            // TODO: Fetch real executions from n8n API
+            setExecutions(mockExecutions);
+            setIsLoading(false);
+        }
+    }, [user, loading, router]);
 
-    if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>;
-    if (!user) return null;
+    const handleSignOut = async () => {
+        await signOut();
+        router.push("/");
+    };
+
+    const handleRefresh = () => {
+        setIsLoading(true);
+        // TODO: Refetch from n8n API
+        setTimeout(() => {
+            setExecutions(mockExecutions);
+            setIsLoading(false);
+        }, 500);
+    };
+
+    const filteredExecutions = executions.filter(exec => {
+        if (filter === "all") return true;
+        return exec.status === filter;
+    });
+
+    const getStatusIcon = (status: string) => {
+        switch (status) {
+            case "success":
+                return <CheckCircle className="h-4 w-4 text-green-500" />;
+            case "failed":
+                return <XCircle className="h-4 w-4 text-red-500" />;
+            case "running":
+                return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
+            default:
+                return <PlayCircle className="h-4 w-4 text-muted-foreground" />;
+        }
+    };
+
+    const getStatusBadge = (status: string) => {
+        const classes = {
+            success: "bg-green-500/10 text-green-600",
+            failed: "bg-red-500/10 text-red-500",
+            running: "bg-blue-500/10 text-blue-500",
+            pending: "bg-gray-500/10 text-gray-500",
+        };
+        return classes[status as keyof typeof classes] || classes.pending;
+    };
+
+    if (loading || isLoading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+        );
+    }
+
+    if (!user) {
+        return null;
+    }
+
+    const stats = {
+        total: executions.length,
+        success: executions.filter(e => e.status === "success").length,
+        failed: executions.filter(e => e.status === "failed").length,
+        running: executions.filter(e => e.status === "running").length,
+    };
 
     return (
         <div className="min-h-screen bg-background">
+            {/* Sidebar */}
             <aside className="fixed left-0 top-0 bottom-0 w-56 border-r border-border bg-background z-40">
                 <div className="flex flex-col h-full">
                     <div className="p-4 border-b border-border">
                         <Link href="/" className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary"><Workflow className="h-4 w-4 text-primary-foreground" /></div>
-                            <span className="font-semibold">FlowForge</span>
+                            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
+                                <Workflow className="h-4 w-4 text-primary-foreground" />
+                            </div>
+                            <span className="font-semibold">AgentForge</span>
                         </Link>
                     </div>
+
                     <nav className="flex-1 p-3 space-y-1">
                         {navItems.map((item) => (
-                            <Link key={item.href} href={item.href} className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${item.active ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
-                                <item.icon className="h-4 w-4" />{item.label}
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${item.active
+                                    ? "bg-secondary text-foreground font-medium"
+                                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                                    }`}
+                            >
+                                <item.icon className="h-4 w-4" />
+                                {item.label}
                             </Link>
                         ))}
                     </nav>
+
                     <div className="p-3 border-t border-border">
                         <div className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-secondary transition-colors cursor-pointer group">
-                            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">{user.displayName?.charAt(0) || user.email?.charAt(0).toUpperCase()}</div>
-                            <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{user.displayName || "User"}</p></div>
-                            <button onClick={handleSignOut} className="p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-background" title="Sign out"><LogOut className="h-4 w-4 text-muted-foreground" /></button>
+                            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
+                                {user.displayName?.charAt(0) || user.email?.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">
+                                    {user.displayName || "User"}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                            </div>
+                            <button
+                                onClick={handleSignOut}
+                                className="p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-background transition-all"
+                                title="Sign out"
+                            >
+                                <LogOut className="h-4 w-4 text-muted-foreground" />
+                            </button>
                         </div>
                     </div>
                 </div>
             </aside>
 
+            {/* Main */}
             <main className="pl-56">
                 <header className="sticky top-0 z-30 border-b border-border bg-background">
                     <div className="flex items-center justify-between px-6 py-4">
-                        <div><h1 className="text-xl font-semibold">Executions</h1><p className="text-sm text-muted-foreground">View workflow execution history</p></div>
-                        <button onClick={handleRefresh} disabled={isRefreshing} className="btn-secondary text-sm"><RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />Refresh</button>
+                        <div>
+                            <h1 className="text-xl font-semibold">Executions</h1>
+                            <p className="text-sm text-muted-foreground">
+                                Monitor workflow execution history
+                            </p>
+                        </div>
+                        <button onClick={handleRefresh} className="btn-ghost">
+                            <RefreshCw className="h-4 w-4" />
+                            Refresh
+                        </button>
                     </div>
                 </header>
 
                 <div className="p-6 space-y-6">
+                    {/* Stats */}
                     <div className="grid grid-cols-4 gap-4">
-                        <div className="rounded-lg border border-border p-4"><Play className="h-4 w-4 text-muted-foreground mb-2" /><p className="text-2xl font-semibold">{mockExecutions.length}</p><p className="text-xs text-muted-foreground">Total</p></div>
-                        <div className="rounded-lg border border-border p-4"><CheckCircle className="h-4 w-4 text-green-500 mb-2" /><p className="text-2xl font-semibold">{mockExecutions.filter(e => e.status === "success").length}</p><p className="text-xs text-muted-foreground">Successful</p></div>
-                        <div className="rounded-lg border border-border p-4"><XCircle className="h-4 w-4 text-red-500 mb-2" /><p className="text-2xl font-semibold">{mockExecutions.filter(e => e.status === "failed").length}</p><p className="text-xs text-muted-foreground">Failed</p></div>
-                        <div className="rounded-lg border border-border p-4"><Clock className="h-4 w-4 text-blue-500 mb-2" /><p className="text-2xl font-semibold">{mockExecutions.filter(e => e.status === "running").length}</p><p className="text-xs text-muted-foreground">Running</p></div>
+                        <button
+                            onClick={() => setFilter("all")}
+                            className={`rounded-lg border p-4 text-left transition-colors ${filter === "all" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                                }`}
+                        >
+                            <p className="text-2xl font-semibold">{stats.total}</p>
+                            <p className="text-xs text-muted-foreground">Total Executions</p>
+                        </button>
+                        <button
+                            onClick={() => setFilter("success")}
+                            className={`rounded-lg border p-4 text-left transition-colors ${filter === "success" ? "border-green-500 bg-green-500/5" : "border-border hover:border-green-500/50"
+                                }`}
+                        >
+                            <p className="text-2xl font-semibold text-green-600">{stats.success}</p>
+                            <p className="text-xs text-muted-foreground">Successful</p>
+                        </button>
+                        <button
+                            onClick={() => setFilter("failed")}
+                            className={`rounded-lg border p-4 text-left transition-colors ${filter === "failed" ? "border-red-500 bg-red-500/5" : "border-border hover:border-red-500/50"
+                                }`}
+                        >
+                            <p className="text-2xl font-semibold text-red-500">{stats.failed}</p>
+                            <p className="text-xs text-muted-foreground">Failed</p>
+                        </button>
+                        <button
+                            onClick={() => setFilter("running")}
+                            className={`rounded-lg border p-4 text-left transition-colors ${filter === "running" ? "border-blue-500 bg-blue-500/5" : "border-border hover:border-blue-500/50"
+                                }`}
+                        >
+                            <p className="text-2xl font-semibold text-blue-500">{stats.running}</p>
+                            <p className="text-xs text-muted-foreground">Running</p>
+                        </button>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <Filter className="h-4 w-4 text-muted-foreground" /><span className="text-sm text-muted-foreground mr-2">Filter:</span>
-                        {["all", "success", "failed", "running"].map((s) => (
-                            <button key={s} onClick={() => setFilter(s)} className={`px-3 py-1.5 rounded-md text-sm transition-colors ${filter === s ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>
-                        ))}
-                    </div>
-
+                    {/* Executions List */}
                     <div className="rounded-lg border border-border">
-                        <div className="px-4 py-3 border-b border-border"><h2 className="text-sm font-medium">Recent Executions</h2></div>
+                        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                            <h2 className="text-sm font-medium">
+                                {filter === "all" ? "All Executions" : `${filter.charAt(0).toUpperCase() + filter.slice(1)} Executions`}
+                            </h2>
+                            <span className="text-xs text-muted-foreground">{filteredExecutions.length} results</span>
+                        </div>
                         <div className="divide-y divide-border">
-                            {filteredExecutions.map((exec, i) => {
-                                const status = statusConfig[exec.status] || statusConfig.success;
-                                const StatusIcon = status.icon;
-                                return (
-                                    <motion.div key={exec.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }} className="flex items-center justify-between px-4 py-3 hover:bg-secondary/50 transition-colors group">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`h-8 w-8 rounded-md flex items-center justify-center ${status.bg}`}><StatusIcon className={`h-4 w-4 ${status.color} ${exec.status === "running" ? "animate-spin" : ""}`} /></div>
-                                            <div><p className="text-sm font-medium">{exec.workflow_name}</p><div className="flex items-center gap-2 text-xs text-muted-foreground"><Calendar className="h-3 w-3" />{new Date(exec.started_at).toLocaleString()}</div></div>
+                            {filteredExecutions.length === 0 ? (
+                                <div className="px-4 py-12 text-center">
+                                    <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                                    <h3 className="text-sm font-medium mb-1">No executions found</h3>
+                                    <p className="text-xs text-muted-foreground">
+                                        Execute a workflow to see results here
+                                    </p>
+                                </div>
+                            ) : (
+                                filteredExecutions.map((execution) => (
+                                    <div
+                                        key={execution.id}
+                                        className="flex items-center justify-between px-4 py-3 hover:bg-secondary/50 transition-colors"
+                                    >
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            {getStatusIcon(execution.status)}
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium truncate">
+                                                    {execution.workflowName}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {new Date(execution.startedAt).toLocaleString()}
+                                                </p>
+                                            </div>
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            {exec.error && <span className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{exec.error}</span>}
-                                            <span className="text-sm">{exec.duration}</span>
-                                            <span className={`badge ${exec.status === "success" ? "badge-success" : exec.status === "failed" ? "bg-red-500/10 text-red-500" : "badge-secondary"}`}>{status.label}</span>
-                                            <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                                            {execution.error && (
+                                                <span className="text-xs text-red-500 max-w-[150px] truncate">
+                                                    {execution.error}
+                                                </span>
+                                            )}
+                                            {execution.duration && (
+                                                <span className="text-xs text-muted-foreground">
+                                                    {execution.duration}
+                                                </span>
+                                            )}
+                                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(execution.status)}`}>
+                                                {execution.status}
+                                            </span>
+                                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                         </div>
-                                    </motion.div>
-                                );
-                            })}
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>

@@ -1,10 +1,5 @@
 version: '3.8'
 
-volumes:
-  n8n_storage:
-  postgres_storage:
-
-
 networks:
   agentforge-net:
 
@@ -63,3 +58,24 @@ services:
     restart: always
     networks:
       - agentforge-net
+
+  # Qdrant Vector Database for AI/RAG features
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: always
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    networks:
+      - agentforge-net
+
+volumes:
+  n8n_storage:
+  postgres_storage:
+  qdrant_storage:
+
+
