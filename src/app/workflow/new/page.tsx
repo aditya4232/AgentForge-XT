@@ -43,6 +43,7 @@ import {
     Loader2,
     Sparkles,
 } from "lucide-react";
+import { WorkflowHelp } from "@/components/workflow/WorkflowHelp";
 
 // Node categories
 const nodeCategories = [
@@ -103,8 +104,8 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
     return (
         <div
             className={`relative min-w-[180px] rounded-xl border-2 bg-card shadow-lg transition-all ${selected
-                    ? "border-violet-500 shadow-violet-500/25"
-                    : "border-border hover:border-violet-500/50"
+                ? "border-violet-500 shadow-violet-500/25"
+                : "border-border hover:border-violet-500/50"
                 }`}
         >
             {/* Left Handle (Input) */}
@@ -136,10 +137,10 @@ function CustomNode({ data, selected }: { data: any; selected: boolean }) {
             {data.status && (
                 <div
                     className={`px-3 py-2 border-t text-xs flex items-center gap-2 ${data.status === "success"
-                            ? "border-green-500/30 bg-green-500/10 text-green-500"
-                            : data.status === "error"
-                                ? "border-red-500/30 bg-red-500/10 text-red-500"
-                                : "border-border"
+                        ? "border-green-500/30 bg-green-500/10 text-green-500"
+                        : data.status === "error"
+                            ? "border-red-500/30 bg-red-500/10 text-red-500"
+                            : "border-border"
                         }`}
                 >
                     {data.status === "success" && <CheckCircle className="h-3.5 w-3.5" />}
@@ -672,6 +673,9 @@ export default function NewWorkflowPage() {
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+                {/* Help Button */}
+                <WorkflowHelp />
             </div>
         </div>
     );
