@@ -62,6 +62,20 @@ export const nodeCategories: NodeCategory[] = [
     },
 ];
 
+// Add missing nodes to categories for compatibility
+const extraNodes = [
+    { category: "AI & Agents", node: { type: "ai_chat", label: "AI Chat", icon: Zap, color: "bg-violet-500/10 text-violet-600" } },
+    { category: "AI & Agents", node: { type: "ai_rag", label: "RAG Query", icon: Zap, color: "bg-violet-500/10 text-violet-600" } },
+    { category: "Integrations", node: { type: "delay", label: "Delay", icon: Timer, color: "bg-blue-500/10 text-blue-600" } },
+];
+
+extraNodes.forEach(item => {
+    const cat = nodeCategories.find(c => c.name === item.category);
+    if (cat && !cat.nodes.find(n => n.type === item.node.type)) {
+        cat.nodes.push(item.node);
+    }
+});
+
 export function getNodeInfo(type: string) {
     for (const category of nodeCategories) {
         const node = category.nodes.find((n) => n.type === type);

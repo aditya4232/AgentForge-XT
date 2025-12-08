@@ -15,8 +15,6 @@ import ReactFlow, {
     Connection,
     BackgroundVariant,
     Panel,
-    Handle,
-    Position,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,161 +26,72 @@ import {
     Plus,
     Trash2,
     X,
-    Globe,
     Clock,
-    Send,
     Mail,
     GitBranch,
-    Repeat,
-    Filter,
-    Wand2,
-    Timer,
     Zap,
-    CheckCircle,
-    AlertCircle,
     Loader2,
     Sparkles,
 } from "lucide-react";
 import { WorkflowHelp } from "@/components/workflow/WorkflowHelp";
+import CustomNode from "@/components/workflow/CustomNode";
+import { nodeCategories } from "@/lib/workflow-constants";
 
-// Node categories
-const nodeCategories = [
-    {
-        name: "Triggers",
-        nodes: [
-            { type: "webhook", label: "Webhook", icon: Globe, color: "bg-green-500/10 text-green-600" },
-            { type: "schedule", label: "Schedule", icon: Clock, color: "bg-green-500/10 text-green-600" },
-            { type: "manual", label: "Manual", icon: Play, color: "bg-green-500/10 text-green-600" },
-        ],
-    },
-    {
-        name: "AI",
-        nodes: [
-            { type: "ai_chat", label: "AI Chat", icon: Sparkles, color: "bg-violet-500/10 text-violet-600" },
-            { type: "ai_embedding", label: "Embeddings", icon: Zap, color: "bg-violet-500/10 text-violet-600" },
-            { type: "ai_rag", label: "RAG Query", icon: Sparkles, color: "bg-violet-500/10 text-violet-600" },
-        ],
-    },
-    {
-        name: "Actions",
-        nodes: [
-            { type: "http_request", label: "HTTP Request", icon: Send, color: "bg-blue-500/10 text-blue-600" },
-            { type: "email", label: "Send Email", icon: Mail, color: "bg-blue-500/10 text-blue-600" },
-            { type: "delay", label: "Delay", icon: Timer, color: "bg-blue-500/10 text-blue-600" },
-        ],
-    },
-    {
-        name: "Logic",
-        nodes: [
-            { type: "condition", label: "Condition", icon: GitBranch, color: "bg-orange-500/10 text-orange-600" },
-            { type: "loop", label: "Loop", icon: Repeat, color: "bg-orange-500/10 text-orange-600" },
-        ],
-    },
-    {
-        name: "Data",
-        nodes: [
-            { type: "transform", label: "Transform", icon: Wand2, color: "bg-purple-500/10 text-purple-600" },
-            { type: "filter", label: "Filter", icon: Filter, color: "bg-purple-500/10 text-purple-600" },
-        ],
-    },
-];
-
-// Get node info helper
-function getNodeInfo(type: string) {
-    for (const category of nodeCategories) {
-        const node = category.nodes.find((n) => n.type === type);
-        if (node) return node;
-    }
-    return null;
-}
-
-// Custom node component with visible handles
-function CustomNode({ data, selected }: { data: any; selected: boolean }) {
-    const nodeInfo = getNodeInfo(data.type);
-    const Icon = nodeInfo?.icon || Zap;
-
-    return (
-        <div
-            className={`relative min-w-[180px] rounded-xl border-2 bg-card shadow-lg transition-all ${selected
-                ? "border-violet-500 shadow-violet-500/25"
-                : "border-border hover:border-violet-500/50"
-                }`}
-        >
-            {/* Left Handle (Input) */}
-            <Handle
-                type="target"
-                position={Position.Left}
-                style={{
-                    width: 14,
-                    height: 14,
-                    left: -8,
-                    background: '#8b5cf6',
-                    border: '3px solid #1e1e2e',
-                    cursor: 'crosshair',
-                }}
-            />
-
-            <div className="p-3">
-                <div className="flex items-center gap-3">
-                    <div className={`h-9 w-9 rounded-lg flex items-center justify-center shadow-md ${nodeInfo?.color || "bg-violet-500/10 text-violet-500"}`}>
-                        <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold truncate">{data.label}</p>
-                        <p className="text-xs text-muted-foreground">{nodeInfo?.label || data.type}</p>
-                    </div>
-                </div>
-            </div>
-
-            {data.status && (
-                <div
-                    className={`px-3 py-2 border-t text-xs flex items-center gap-2 ${data.status === "success"
-                        ? "border-green-500/30 bg-green-500/10 text-green-500"
-                        : data.status === "error"
-                            ? "border-red-500/30 bg-red-500/10 text-red-500"
-                            : "border-border"
-                        }`}
-                >
-                    {data.status === "success" && <CheckCircle className="h-3.5 w-3.5" />}
-                    {data.status === "error" && <AlertCircle className="h-3.5 w-3.5" />}
-                    {data.status === "success" ? "Success" : data.status === "error" ? "Failed" : "Pending"}
-                </div>
-            )}
-
-            {/* Right Handle (Output) */}
-            <Handle
-                type="source"
-                position={Position.Right}
-                style={{
-                    width: 14,
-                    height: 14,
-                    right: -8,
-                    background: '#8b5cf6',
-                    border: '3px solid #1e1e2e',
-                    cursor: 'crosshair',
-                }}
-            />
-        </div>
-    );
-}
+// CustomNode is now imported from @/components/workflow/CustomNode
 
 const nodeTypes = { custom: CustomNode };
 
-// Templates for quick start
+// Templates for quick start - Enhanced with AI workflows
 const templates = [
     {
         id: "blank",
         name: "Blank Workflow",
         description: "Start from scratch",
         icon: Plus,
+        category: "Basic",
         nodes: [],
         edges: [],
+    },
+    {
+        id: "ai-chatbot",
+        name: "AI Chatbot",
+        description: "Build a conversational AI assistant",
+        icon: Sparkles,
+        category: "AI",
+        nodes: [
+            { id: "1", type: "custom", position: { x: 100, y: 150 }, data: { label: "Webhook", type: "webhook" } },
+            { id: "2", type: "custom", position: { x: 350, y: 150 }, data: { label: "AI Chat", type: "ai_chat" } },
+            { id: "3", type: "custom", position: { x: 600, y: 150 }, data: { label: "Response", type: "http_request" } },
+        ],
+        edges: [
+            { id: "e1-2", source: "1", target: "2" },
+            { id: "e2-3", source: "2", target: "3" },
+        ],
+    },
+    {
+        id: "rag-qa",
+        name: "Document Q&A (RAG)",
+        description: "Answer questions using your documents",
+        icon: Zap,
+        category: "AI",
+        nodes: [
+            { id: "1", type: "custom", position: { x: 100, y: 200 }, data: { label: "Webhook", type: "webhook" } },
+            { id: "2", type: "custom", position: { x: 350, y: 100 }, data: { label: "Embeddings", type: "ai_embedding" } },
+            { id: "3", type: "custom", position: { x: 350, y: 300 }, data: { label: "RAG Query", type: "ai_rag" } },
+            { id: "4", type: "custom", position: { x: 600, y: 200 }, data: { label: "AI Chat", type: "ai_chat" } },
+        ],
+        edges: [
+            { id: "e1-2", source: "1", target: "2" },
+            { id: "e2-3", source: "2", target: "3" },
+            { id: "e3-4", source: "3", target: "4" },
+        ],
     },
     {
         id: "webhook-notify",
         name: "Webhook to Email",
         description: "Receive webhook and send email notification",
         icon: Mail,
+        category: "Integrations",
         nodes: [
             { id: "1", type: "custom", position: { x: 100, y: 150 }, data: { label: "Webhook", type: "webhook" } },
             { id: "2", type: "custom", position: { x: 350, y: 150 }, data: { label: "Transform", type: "transform" } },
@@ -195,37 +104,44 @@ const templates = [
     },
     {
         id: "scheduled-report",
-        name: "Scheduled Report",
-        description: "Run daily tasks on schedule",
+        name: "Scheduled AI Report",
+        description: "Generate AI-powered reports on schedule",
         icon: Clock,
+        category: "Automation",
         nodes: [
             { id: "1", type: "custom", position: { x: 100, y: 150 }, data: { label: "Schedule", type: "schedule" } },
-            { id: "2", type: "custom", position: { x: 350, y: 150 }, data: { label: "HTTP Request", type: "http_request" } },
-            { id: "3", type: "custom", position: { x: 600, y: 150 }, data: { label: "Send Email", type: "email" } },
+            { id: "2", type: "custom", position: { x: 350, y: 150 }, data: { label: "Fetch Data", type: "http_request" } },
+            { id: "3", type: "custom", position: { x: 600, y: 150 }, data: { label: "AI Summary", type: "ai_chat" } },
+            { id: "4", type: "custom", position: { x: 850, y: 150 }, data: { label: "Send Email", type: "email" } },
         ],
         edges: [
             { id: "e1-2", source: "1", target: "2" },
             { id: "e2-3", source: "2", target: "3" },
+            { id: "e3-4", source: "3", target: "4" },
         ],
     },
     {
-        id: "conditional",
-        name: "Conditional Flow",
-        description: "Branch based on conditions",
+        id: "content-moderation",
+        name: "AI Content Moderation",
+        description: "Automatically moderate content using AI",
         icon: GitBranch,
+        category: "AI",
         nodes: [
             { id: "1", type: "custom", position: { x: 100, y: 150 }, data: { label: "Webhook", type: "webhook" } },
-            { id: "2", type: "custom", position: { x: 350, y: 150 }, data: { label: "Condition", type: "condition" } },
-            { id: "3", type: "custom", position: { x: 600, y: 50 }, data: { label: "Send Email", type: "email" } },
-            { id: "4", type: "custom", position: { x: 600, y: 250 }, data: { label: "HTTP Request", type: "http_request" } },
+            { id: "2", type: "custom", position: { x: 350, y: 150 }, data: { label: "AI Moderation", type: "ai_chat" } },
+            { id: "3", type: "custom", position: { x: 600, y: 150 }, data: { label: "Condition", type: "condition" } },
+            { id: "4", type: "custom", position: { x: 850, y: 50 }, data: { label: "Approve", type: "http_request" } },
+            { id: "5", type: "custom", position: { x: 850, y: 250 }, data: { label: "Flag Review", type: "http_request" } },
         ],
         edges: [
             { id: "e1-2", source: "1", target: "2" },
             { id: "e2-3", source: "2", target: "3" },
-            { id: "e2-4", source: "2", target: "4" },
+            { id: "e3-4", source: "3", target: "4" },
+            { id: "e3-5", source: "3", target: "5" },
         ],
     },
 ];
+
 
 export default function NewWorkflowPage() {
     const router = useRouter();

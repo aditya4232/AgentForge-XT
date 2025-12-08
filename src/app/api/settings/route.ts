@@ -1,11 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client with service role for server-side operations
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const isSupabaseConfigured = !!(supabaseUrl && supabaseServiceKey);
+let supabase: SupabaseClient | null = null;
+
+if (isSupabaseConfigured) {
+    supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+}
+
+// Default settings for when Supabase is not configured
+const defaultSettings = {
+    openai_api_key: null,
+    openai_base_url: 'https://api.openai.com/v1',
+    openai_default_model: 'gpt-4-turbo-preview',
+    n8n_url: 'http://localhost:5678',
+    n8n_api_key: null,
+    qdrant_url: 'http://localhost:6333',
+    qdrant_api_key: null,
+    auto_save: true,
+    notifications_enabled: true,
+    theme: 'dark',
+};
 
 interface UserSettings {
     openai_api_key?: string;
@@ -31,14 +50,17 @@ function maskApiKey(key: string | null): string | null {
  */
 export async function GET(request: NextRequest) {
     try {
+        // Return defaults if Supabase not configured
+        if (!isSupabaseConfigured || !supabase) {
+            return NextResponse.json({ settings: defaultSettings });
+        }
+
         // Get user ID from header (set by middleware/auth)
         const firebaseUid = request.headers.get('x-user-id');
 
         if (!firebaseUid) {
-            return NextResponse.json(
-                { error: 'Unauthorized - Please sign in' },
-                { status: 401 }
-            );
+            // Return defaults for unauthenticated users
+            return NextResponse.json({ settings: defaultSettings });
         }
 
         // Get profile ID
@@ -106,6 +128,14 @@ export async function GET(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
     try {
+        // Return error if Supabase not configured
+        if (!isSupabaseConfigured || !supabase) {
+            return NextResponse.json(
+                { error: 'Database not configured' },
+                { status: 503 }
+            );
+        }
+
         const firebaseUid = request.headers.get('x-user-id');
 
         if (!firebaseUid) {
