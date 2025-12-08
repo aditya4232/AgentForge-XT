@@ -1,10 +1,13 @@
 /**
  * OpenAI API Client
  * Provides AI capabilities for AgentForge-XT
+ * Supports OpenAI and OpenAI-compatible APIs (Azure, Ollama, LocalAI, OpenRouter, etc.)
  */
 
+// Environment configuration with fallbacks
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
-const OPENAI_BASE_URL = 'https://api.openai.com/v1';
+const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
+const OPENAI_DEFAULT_MODEL = process.env.OPENAI_DEFAULT_MODEL || 'gpt-4-turbo-preview';
 
 export interface ChatMessage {
     role: 'system' | 'user' | 'assistant' | 'function';
@@ -33,7 +36,7 @@ export interface FunctionDefinition {
     description?: string;
     parameters: {
         type: 'object';
-        properties: Record<string, any>;
+        properties: Record<string, unknown>;
         required?: string[];
     };
 }
@@ -74,14 +77,22 @@ export interface EmbeddingResponse {
     };
 }
 
+export interface OpenAIClientConfig {
+    apiKey?: string;
+    baseUrl?: string;
+    defaultModel?: string;
+}
+
 class OpenAIClient {
     private apiKey: string;
     private baseUrl: string;
+    private defaultModel: string;
     private headers: HeadersInit;
 
-    constructor(apiKey?: string) {
-        this.apiKey = apiKey || OPENAI_API_KEY;
-        this.baseUrl = OPENAI_BASE_URL;
+    constructor(config?: OpenAIClientConfig) {
+        this.apiKey = config?.apiKey || OPENAI_API_KEY;
+        this.baseUrl = this.normalizeBaseUrl(config?.baseUrl || OPENAI_BASE_URL);
+        this.defaultModel = config?.defaultModel || OPENAI_DEFAULT_MODEL;
         this.headers = {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${this.apiKey}`,
@@ -89,10 +100,81 @@ class OpenAIClient {
     }
 
     /**
+     * Normalize base URL (remove trailing slash)
+     */
+    private normalizeBaseUrl(url: string): string {
+        return url.replace(/\/+$/, '');
+    }
+
+    /**
+     * Update client configuration dynamically
+     */
+    updateConfig(config: Partial<OpenAIClientConfig>): void {
+        if (config.apiKey) {
+            this.apiKey = config.apiKey;
+            this.headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.apiKey}`,
+            };
+        }
+        if (config.baseUrl) {
+            this.baseUrl = this.normalizeBaseUrl(config.baseUrl);
+        }
+        if (config.defaultModel) {
+            this.defaultModel = config.defaultModel;
+        }
+    }
+
+    /**
      * Check if OpenAI is configured
      */
     isConfigured(): boolean {
-        return Boolean(this.apiKey && this.apiKey.startsWith('sk-'));
+        // Support multiple API key formats (OpenAI sk-, Anthropic sk-, custom keys)
+        return Boolean(this.apiKey && this.apiKey.length > 10);
+    }
+
+    /**
+     * Get current configuration (for display, masks API key)
+     */
+    getConfig(): { baseUrl: string; model: string; configured: boolean } {
+        return {
+            baseUrl: this.baseUrl,
+            model: this.defaultModel,
+            configured: this.isConfigured(),
+        };
+    }
+
+    /**
+     * Test API connection
+     */
+    async testConnection(): Promise<{ success: boolean; error?: string; models?: string[] }> {
+        if (!this.isConfigured()) {
+            return { success: false, error: 'API key is not configured' };
+        }
+
+        try {
+            const response = await fetch(`${this.baseUrl}/models`, {
+                method: 'GET',
+                headers: this.headers,
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ error: { message: response.statusText } }));
+                return {
+                    success: false,
+                    error: error.error?.message || `HTTP ${response.status}: ${response.statusText}`
+                };
+            }
+
+            const data = await response.json();
+            const models = data.data?.map((m: { id: string }) => m.id) || [];
+            return { success: true, models };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Connection failed'
+            };
+        }
     }
 
     /**
@@ -112,7 +194,7 @@ class OpenAIClient {
                 method: 'POST',
                 headers: this.headers,
                 body: JSON.stringify({
-                    model: options.model || 'gpt-4-turbo-preview',
+                    model: options.model || this.defaultModel,
                     messages,
                     temperature: options.temperature ?? 0.7,
                     max_tokens: options.max_tokens,
@@ -199,7 +281,7 @@ class OpenAIClient {
     }
 
     /**
-     * Generate text with streaming (for future implementation)
+     * Generate text with streaming
      */
     async *streamChatCompletion(
         messages: ChatMessage[],
@@ -215,7 +297,7 @@ class OpenAIClient {
                 method: 'POST',
                 headers: this.headers,
                 body: JSON.stringify({
-                    model: options.model || 'gpt-4-turbo-preview',
+                    model: options.model || this.defaultModel,
                     messages,
                     temperature: options.temperature ?? 0.7,
                     max_tokens: options.max_tokens,
@@ -254,7 +336,7 @@ class OpenAIClient {
                             if (content) {
                                 yield content;
                             }
-                        } catch (e) {
+                        } catch {
                             // Skip invalid JSON
                         }
                     }
@@ -272,7 +354,7 @@ class OpenAIClient {
         userMessage: string,
         functions: FunctionDefinition[],
         systemPrompt?: string
-    ): Promise<{ functionName: string; arguments: Record<string, any> } | null> {
+    ): Promise<{ functionName: string; arguments: Record<string, unknown> } | null> {
         const messages: ChatMessage[] = [];
 
         if (systemPrompt) {
@@ -304,8 +386,13 @@ class OpenAIClient {
     }
 }
 
-// Export singleton instance
+// Export singleton instance (uses environment variables)
 export const openAIClient = new OpenAIClient();
 
 // Export class for testing and custom instances
 export { OpenAIClient };
+
+// Export helper to create client with user settings
+export function createOpenAIClient(config: OpenAIClientConfig): OpenAIClient {
+    return new OpenAIClient(config);
+}
