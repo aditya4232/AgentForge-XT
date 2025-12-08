@@ -44,10 +44,12 @@ AgentForge-XT is a production-ready workflow automation platform inspired by n8n
 - **Data Retention** - Automatic cleanup policies
 
 ### ⚙️ Settings & Configuration
-- **Service Status Monitoring** - Real-time n8n and AI service status
-- **API Key Management** - Secure storage for OpenAI and other services
+- **Service Status Monitoring** - Real-time n8n, AI, and Supabase service status
+- **API Key Management** - Secure encrypted storage for API keys per user
+- **OpenAI-Compatible APIs** - Support for Azure, Ollama, LocalAI, OpenRouter, Groq, Together AI
+- **Custom Base URL** - Connect to any OpenAI-compatible endpoint
+- **Connection Testing** - Test AI and n8n connections before saving
 - **User Preferences** - Auto-save, notifications, theme settings
-- **n8n Integration Settings** - Configure your n8n instance
 
 ---
 
@@ -103,31 +105,38 @@ docker-compose up -d
 
 ## 🔧 Environment Variables
 
+See `.env.example` for full documentation. Key variables:
+
 ```bash
-# Firebase Configuration
+# Firebase Configuration (Authentication)
 NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
-# Supabase Configuration
+# Supabase Configuration (Database)
 NEXT_PUBLIC_SUPABASE_URL=https://your_project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-# n8n Configuration
+# n8n Configuration (Workflow Automation)
 NEXT_PUBLIC_N8N_URL=http://localhost:5678
 N8N_API_KEY=your_n8n_api_key
 
-# AI Services
+# AI Services (OpenAI or Compatible)
 OPENAI_API_KEY=your_openai_api_key
+OPENAI_BASE_URL=https://api.openai.com/v1  # Or use compatible APIs:
+# - Azure: https://YOUR_RESOURCE.openai.azure.com/openai/deployments/YOUR_DEPLOYMENT/v1
+# - Ollama: http://localhost:11434/v1
+# - LocalAI: http://localhost:8080/v1
+# - OpenRouter: https://openrouter.ai/api/v1
+# - Groq: https://api.groq.com/openai/v1
 
-# Qdrant Vector Database
+# Qdrant Vector Database (RAG features)
 QDRANT_URL=http://localhost:6333
 QDRANT_API_KEY=your_qdrant_api_key
 ```
+
+> 💡 **Tip**: Users can also configure their API keys directly in the Settings page after signing in!
 
 ---
 
